@@ -5,6 +5,14 @@ const config = {
     content: ['./pages/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
     prefix: '',
     theme: {
+        screens: {
+            mobile: '400px',
+            mablet: '450px',
+            tablet: '650px',
+            taptop: '820px',
+            laptop: '960px',
+            desktop: '1280px',
+        },
         container: {
             center: true,
             padding: '2rem',
