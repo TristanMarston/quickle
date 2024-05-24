@@ -153,7 +153,7 @@ const Statistics = () => {
                     { text: 'current streak', stat: formattedStats.currentStreak },
                     { text: 'best streak', stat: formattedStats.bestStreak },
                 ].map((info) => (
-                    <div className='flex flex-col justify-center items-center'>
+                    <div className='flex flex-col justify-center items-center' key={info.text}>
                         <p className={`${fredokaBold.className} text-3xl tracking-wider`}>{info.stat}</p>
                         <p className={`${fredokaSemiBold.className} text-xl text-center`}>
                             {info.text.split(' ')[0]}
