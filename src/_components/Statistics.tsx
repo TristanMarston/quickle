@@ -166,7 +166,7 @@ const Statistics = () => {
             <h3 className={`${fredokaSemiBold.className} text-2xl text-center`}>guess distribution</h3>
             <div className='flex flex-col gap-2 mb-4'>
                 {formattedStats.guessNumbers.map((amount, index) => (
-                    <div className={`${fredokaLight.className} flex gap-2 items-center`}>
+                    <div className={`${fredokaLight.className} flex gap-2 items-center`} key={amount + index}>
                         <p className='w-2'>{index + 1}</p>
                         <div
                             style={{ width: `${amount !== 0 ? (amount / formattedStats.timesWon) * 100 : 4}%` }}
