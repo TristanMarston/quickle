@@ -184,7 +184,7 @@ const Statistics = () => {
                 </div>
                 <div className='flex flex-col items-center w-full'>
                     <h3 className={`${fredokaSemiBold.className} text-2xl`}>average time</h3>
-                    <h5 className={`${fredokaLight.className} text-lg`}>{formattedStats.averageTime}</h5>
+                    <h5 className={`${fredokaLight.className} text-lg`}>{formattedStats.timesWon === 0 ? '00:00:00.000' : formattedStats.averageTime}</h5>
                 </div>
             </div>
             {/* <div className='flex gap-5 px-5 w-full'>
