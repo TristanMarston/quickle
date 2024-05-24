@@ -6,7 +6,9 @@ import { Delete, RotateCcw, X } from 'lucide-react';
 import { Fredoka, Nunito } from 'next/font/google';
 import toast from 'react-hot-toast';
 import PausedModal from './PausedModal';
+import Keyboard from './Keyboard';
 import { useGameContext } from '@/app/context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const fredokaLight = Fredoka({ weight: '400', subsets: ['latin'] });
 const fredokaBold = Fredoka({ weight: '600', subsets: ['latin'] });
@@ -30,27 +32,38 @@ type Game = {
     guesses: string[];
     finalWord: string;
     stopwatch: string;
+    won?: boolean;
+    id?: string;
 };
 
 let finalWord = words[Math.floor(Math.random() * 2500)].toUpperCase();
-// const finalWord = 'going';
-console.log(finalWord);
 
 const Game = () => {
     const context = useGameContext();
     if (context === undefined) {
         throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
     }
-    const { isRunning, setIsRunning, gamePaused, setGamePaused, inputs, setInputs } = context;
+    const { isRunning, setIsRunning, gamePaused, setGamePaused, inputs, setInputs, keyboard, setKeyboard, gamesPlayed, setGamesPlayed, prevGames, setPrevGames, setModalOpened } =
+        context;
 
     const [guess, setGuess] = useState(1);
-    const [keyboard, setKeyboard] = useState<Key[][]>(keyboardData);
-    // const [isRunning, setIsRunning] = useState(false);
     const [isOver, setIsOver] = useState(false);
     const [stopwatchTime, setStopwatchTime] = useState<string>('00:00:00.000');
     const [currentGame, setCurrentGame] = useState<Game>({ guess: guess, guesses: [''], finalWord: finalWord, stopwatch: stopwatchTime });
-    // const [gamePaused, setGamePaused] = useState(false);
     let elapsedTime = 0;
+
+    useEffect(() => {
+        const gamesPlayedString = localStorage.getItem('gamesPlayed');
+
+        let gamesPlayedJSON: Game[] = gamesPlayedString === null ? [] : (JSON.parse(gamesPlayedString) as Game[]);
+
+        if (gamesPlayed.length > 0) {
+            gamesPlayedJSON.push(gamesPlayed[gamesPlayed.length - 1]);
+            gamesPlayedJSON = [...removeDuplicates(gamesPlayedJSON)];
+            setPrevGames(gamesPlayedJSON);
+            localStorage.setItem('gamesPlayed', JSON.stringify(gamesPlayedJSON));
+        }
+    }, [gamesPlayed]);
 
     useEffect(() => {
         if (guess > 1 && isRunning) {
@@ -138,8 +151,8 @@ const Game = () => {
             while (index < inputs.length && inputs[index].text !== '') index++;
 
             if (key.toLowerCase() === 'enter') {
-                console.log(isRunning);
                 if (isRunning && !gamePaused) {
+                    setModalOpened(false);
                     const newInputs: InputBox[] = handleReturn(inputs, index - 1, guess);
                     setInputs(newInputs);
                     return;
@@ -270,6 +283,13 @@ const Game = () => {
         return hours * 3600000 + minutes * 60000 + seconds * 1000 + mil * 10;
     };
 
+    const generateID = (length: number) => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) result += characters.charAt(Math.floor(Math.random() * characters.length));
+        return result;
+    };
+
     useEffect(() => {
         let intervalId: any = null;
 
@@ -304,21 +324,56 @@ const Game = () => {
         };
     }, [isRunning]);
 
-    const stopGame = (won: boolean) => {
-        setInputs((prev: InputBox[]) => {
-            let temp: InputBox[] = [...prev];
-            temp.forEach((input) => (input.locked = true));
-            return temp;
-        });
-        setIsRunning(false);
-        setIsOver(true);
+    const stopGame = useCallback(
+        (won: boolean) => {
+            const generatedID: string = generateID(Math.floor(Math.random() * 15) + 8);
 
-        if (won) {
-            successToast('Good job!');
-        } else {
-            failToast(`The word was ${finalWord.toUpperCase()}`);
-        }
-    };
+            setInputs((prev: InputBox[]) => {
+                let temp: InputBox[] = [...prev];
+
+                setStopwatchTime((prevStopwatch) => {
+                    setGamesPlayed((prev: Game[]) => {
+                        const gamesPlayed: Game[] = [...prev];
+                        let index = 0;
+                        for (index = 0; index < temp.length; index++) {
+                            if (temp[index].text == '') {
+                                index -= 1;
+                                break;
+                            }
+                        }
+                        const currentGuess = Math.floor(index / 5) + 1 < 7 ? Math.floor(index / 5) + 1 : 6;
+
+                        const newGame: Game = { guess: currentGuess, guesses: [], finalWord: finalWord, stopwatch: prevStopwatch, won: won, id: generatedID };
+                        for (let i = 1; i < currentGuess; i++) {
+                            let word = '';
+                            for (let j = i * 5 - 5; j < i * 5; j++) {
+                                word += temp[j].text.toLowerCase();
+                            }
+                            newGame.guesses.push(word);
+                        }
+                        gamesPlayed.push(newGame);
+
+                        return gamesPlayed;
+                    });
+
+                    return prevStopwatch;
+                });
+
+                temp.forEach((input) => (input.locked = true));
+
+                return temp;
+            });
+            setIsRunning(false);
+            setIsOver(true);
+
+            if (won) {
+                successToast('Good job!');
+            } else {
+                failToast(`The word was ${finalWord.toUpperCase()}`);
+            }
+        },
+        [stopwatchTime, currentGame]
+    );
 
     const restartGame = () => {
         setInputs((prev: InputBox[]) => {
@@ -366,21 +421,15 @@ const Game = () => {
         });
     };
 
-    const keyboardElement = (key: Key) => {
-        const color = key.color === 'green' ? 'bg-[#6aaa64]' : key.color === 'yellow' ? 'bg-[#c9b458]' : key.color === 'gray' ? 'bg-[#787c7e]' : 'bg-[#d3d6da]';
-        const textColor = key.color === 'none' ? 'text-black' : 'text-white';
-        const size = key.key.toLowerCase() === 'enter' || key.key.toLowerCase() === 'backspace' ? 'w-16 text-base max-mablet:text-sm' : 'w-12 text-2xl max-mablet:text-xl';
-        const className = `${fredokaBold.className} ${color} ${textColor} ${size} grid place-items-center font-extrabold cursor-pointer rounded-lg select-none h-12`;
+    const removeDuplicates = (games: Game[]): Game[] => {
+        const seenIds = new Map<string | undefined, Game>();
 
-        return !gamePaused ? (
-            <div className={className} onClick={() => handleKeyPress(key.key.toUpperCase())} key={key.key}>
-                {key.key.toLowerCase() !== 'backspace' ? key.key.toUpperCase() : <Delete className='w-8 h-8' />}
-            </div>
-        ) : (
-            <div className={`${fredokaBold.className} ${size} bg-[#d3d6da] grid place-items-center font-extrabold cursor-pointer rounded-lg select-none h-12`}>
-                {key.key.toLowerCase() !== 'backspace' ? key.key.toUpperCase() : <Delete className='w-8 h-8' />}
-            </div>
-        );
+        games.forEach((game) => {
+            if (game.id && !seenIds.has(game.id)) seenIds.set(game.id, game);
+            else if (!game.id) seenIds.set(undefined, game);
+        });
+
+        return Array.from(seenIds.values());
     };
 
     const inputElement = useCallback(
@@ -424,13 +473,34 @@ const Game = () => {
                 <X
                     className={`text-[#ed3a3a] w-8 h-8 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
                     onClick={() => {
+                        console.log('stopped');
                         if (isRunning && !gamePaused) stopGame(false);
                     }}
                     strokeWidth={3}
                 />
-                <div className={`${nunitoLight.className} text-2xl cursor-pointer`} onClick={() => navigator.clipboard.writeText(stopwatchTime)}>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger
+                            className={`${nunitoLight.className} text-2xl cursor-pointer`}
+                            onClick={() => {
+                                toast.success('Copied to Clipboard!', {
+                                    duration: 3000,
+                                    position: 'bottom-right',
+                                    className: `${fredokaLight.className}`,
+                                });
+                                navigator.clipboard.writeText(stopwatchTime);
+                            }}
+                        >
+                            {stopwatchTime}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p className={`${fredokaLight.className}`}>copy to clipboard</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                {/* <div className={`${nunitoLight.className} text-2xl cursor-pointer`} onClick={() => navigator.clipboard.writeText(stopwatchTime)}>
                     {stopwatchTime}
-                </div>
+                </div> */}
                 <RotateCcw
                     className={`${guess == 1 ? 'text-[#10b710] cursor-pointer' : 'text-[#e2e0dd] cursor-not-allowed'} ${
                         gamePaused ? 'opacity-0' : 'opacity-100'
@@ -457,13 +527,7 @@ const Game = () => {
                 {gamePaused && !isRunning && !isOver && <PausedModal restartGame={restartGame} />}
                 {inputs.map((input: InputBox) => inputElement(input))}
             </div>
-            <div className={`flex flex-col gap-1.5 justify-center items-center px-6 max-mablet:px-4 max-mobile:px-2 w-full`}>
-                {keyboard.map((row: Key[]) => (
-                    <div className='flex flex-row justify-center w-full gap-1.5' key={row[0].key}>
-                        {row.map((key: Key) => keyboardElement(key))}
-                    </div>
-                ))}
-            </div>
+            <Keyboard handleKeyPress={handleKeyPress} />
         </div>
     );
 };

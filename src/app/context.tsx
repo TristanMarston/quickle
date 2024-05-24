@@ -1,12 +1,28 @@
 'use client';
 
 import React, { createContext, useState, useContext } from 'react';
+import { keyboardData } from '../../public/pagedata';
 
 type InputBox = {
     id: number;
     text: string;
     locked: boolean;
     color: string;
+};
+
+type Key = {
+    key: string;
+    color: string;
+    class?: string;
+};
+
+type Game = {
+    guess: number;
+    guesses: string[];
+    finalWord: string;
+    stopwatch: string;
+    won?: boolean;
+    id?: string;
 };
 
 type Context = {
@@ -16,6 +32,14 @@ type Context = {
     setGamePaused: React.Dispatch<React.SetStateAction<boolean>>;
     inputs: InputBox[];
     setInputs: React.Dispatch<React.SetStateAction<InputBox[]>>;
+    keyboard: Key[][];
+    setKeyboard: React.Dispatch<React.SetStateAction<Key[][]>>;
+    gamesPlayed: Game[];
+    setGamesPlayed: React.Dispatch<React.SetStateAction<Game[]>>;
+    prevGames: Game[];
+    setPrevGames: React.Dispatch<React.SetStateAction<Game[]>>;
+    modalOpened: boolean;
+    setModalOpened: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 // Create the context
@@ -33,6 +57,16 @@ export const GameProvider = ({ children }: any) => {
         for (let i = 0; i < 30; i++) newInputs[i] = { id: i, text: '', locked: false, color: 'none' };
         return newInputs;
     });
+    const [keyboard, setKeyboard] = useState<Key[][]>(keyboardData);
+    const [gamesPlayed, setGamesPlayed] = useState<Game[]>([]);
+    const [prevGames, setPrevGames] = useState<Game[]>([]);
+    const [modalOpened, setModalOpened] = useState(false);
 
-    return <GameContext.Provider value={{ isRunning, setIsRunning, gamePaused, setGamePaused, inputs, setInputs }}>{children}</GameContext.Provider>;
+    return (
+        <GameContext.Provider
+            value={{ isRunning, setIsRunning, gamePaused, setGamePaused, inputs, setInputs, keyboard, setKeyboard, gamesPlayed, setGamesPlayed, prevGames, setPrevGames, modalOpened, setModalOpened }}
+        >
+            {children}
+        </GameContext.Provider>
+    );
 };
