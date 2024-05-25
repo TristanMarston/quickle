@@ -19,7 +19,7 @@ const Navbar = () => {
         <div className='w-full flex justify-center'>
             <div className='flex flex-col items-center justify-center w-96 max-mablet:w-[22rem]'>
                 <div className='flex items-center justify-between py-1 w-full'>
-                    <Dialog open={modalOpened} onOpenChange={setModalOpened}>
+                    <Dialog open={modalOpened}>
                         <DialogTrigger className='outline-none'>
                             <BarChart2 className='hover:cursor-pointer w-12 h-12 max-mablet:w-10 max-mablet:h-10 max-mobile:w-9 max-mobile:h-9' onClick={() => setModalOpened(true)} />
                         </DialogTrigger>

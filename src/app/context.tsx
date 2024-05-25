@@ -40,6 +40,8 @@ type Context = {
     setPrevGames: React.Dispatch<React.SetStateAction<Game[]>>;
     modalOpened: boolean;
     setModalOpened: React.Dispatch<React.SetStateAction<boolean>>;
+    stopwatchVisible: boolean;
+    setStopwatchVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 // Create the context
@@ -61,10 +63,28 @@ export const GameProvider = ({ children }: any) => {
     const [gamesPlayed, setGamesPlayed] = useState<Game[]>([]);
     const [prevGames, setPrevGames] = useState<Game[]>([]);
     const [modalOpened, setModalOpened] = useState(false);
+    const [stopwatchVisible, setStopwatchVisible] = useState(true);
 
     return (
         <GameContext.Provider
-            value={{ isRunning, setIsRunning, gamePaused, setGamePaused, inputs, setInputs, keyboard, setKeyboard, gamesPlayed, setGamesPlayed, prevGames, setPrevGames, modalOpened, setModalOpened }}
+            value={{
+                isRunning,
+                setIsRunning,
+                gamePaused,
+                setGamePaused,
+                inputs,
+                setInputs,
+                keyboard,
+                setKeyboard,
+                gamesPlayed,
+                setGamesPlayed,
+                prevGames,
+                setPrevGames,
+                modalOpened,
+                setModalOpened,
+                stopwatchVisible,
+                setStopwatchVisible,
+            }}
         >
             {children}
         </GameContext.Provider>

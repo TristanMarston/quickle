@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { keyboardData, words } from '../../public/pagedata';
-import { Delete, RotateCcw, X } from 'lucide-react';
+import { CirclePause, Delete, Eye, EyeOff, Pause, RotateCcw, X } from 'lucide-react';
 import { Fredoka, Nunito } from 'next/font/google';
 import toast from 'react-hot-toast';
 import PausedModal from './PausedModal';
@@ -43,8 +43,22 @@ const Game = () => {
     if (context === undefined) {
         throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
     }
-    const { isRunning, setIsRunning, gamePaused, setGamePaused, inputs, setInputs, keyboard, setKeyboard, gamesPlayed, setGamesPlayed, prevGames, setPrevGames, setModalOpened } =
-        context;
+    const {
+        isRunning,
+        setIsRunning,
+        gamePaused,
+        setGamePaused,
+        inputs,
+        setInputs,
+        keyboard,
+        setKeyboard,
+        gamesPlayed,
+        setGamesPlayed,
+        setPrevGames,
+        setModalOpened,
+        stopwatchVisible,
+        setStopwatchVisible,
+    } = context;
 
     const [guess, setGuess] = useState(1);
     const [isOver, setIsOver] = useState(false);
@@ -151,8 +165,8 @@ const Game = () => {
             while (index < inputs.length && inputs[index].text !== '') index++;
 
             if (key.toLowerCase() === 'enter') {
+                setModalOpened(false);
                 if (isRunning && !gamePaused) {
-                    setModalOpened(false);
                     const newInputs: InputBox[] = handleReturn(inputs, index - 1, guess);
                     setInputs(newInputs);
                     return;
@@ -371,6 +385,8 @@ const Game = () => {
             } else {
                 failToast(`The word was ${finalWord.toUpperCase()}`);
             }
+
+            if (gamesPlayed.length <= 3) toast('Press [ENTER] to start a new game.', { duration: 6000, position: 'top-right', className: `${fredokaLight.className}` });
         },
         [stopwatchTime, currentGame]
     );
@@ -470,18 +486,33 @@ const Game = () => {
     return (
         <div className='mt-3 flex flex-col justify-center items-center'>
             <div className='flex justify-between items-center mb-3 w-[344px] max-mablet:w-[304px]'>
-                <X
-                    className={`text-[#ed3a3a] w-8 h-8 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
-                    onClick={() => {
-                        console.log('stopped');
-                        if (isRunning && !gamePaused) stopGame(false);
-                    }}
-                    strokeWidth={3}
-                />
+                <div className={`flex w-full transition-all ${!stopwatchVisible ? 'gap-[40%]' : 'gap-3 max-mablet:gap-2'}`}>
+                    <X
+                        className={`text-[#ed3a3a] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
+                        onClick={() => {
+                            console.log('stopped');
+                            if (isRunning && !gamePaused) stopGame(false);
+                        }}
+                        strokeWidth={2.5}
+                    />
+                    {stopwatchVisible ? (
+                        <Eye
+                            className={`text-[#076cad] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
+                            onClick={() => setStopwatchVisible(false)}
+                            strokeWidth={2.5}
+                        />
+                    ) : (
+                        <EyeOff
+                            className={`text-[#076cad] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
+                            onClick={() => setStopwatchVisible(true)}
+                            strokeWidth={2.5}
+                        />
+                    )}
+                </div>
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger
-                            className={`${nunitoLight.className} text-2xl cursor-pointer select-none`}
+                            className={`${nunitoLight.className} ${!stopwatchVisible ? 'hidden' : 'block'} text-2xl cursor-pointer select-none`}
                             onClick={() => {
                                 toast.success('Copied to Clipboard!', {
                                     duration: 3000,
@@ -501,30 +532,43 @@ const Game = () => {
                 {/* <div className={`${nunitoLight.className} text-2xl cursor-pointer`} onClick={() => navigator.clipboard.writeText(stopwatchTime)}>
                     {stopwatchTime}
                 </div> */}
-                <RotateCcw
-                    className={`${guess == 1 ? 'text-[#10b710] cursor-pointer' : 'text-[#e2e0dd] cursor-not-allowed'} ${
-                        gamePaused ? 'opacity-0' : 'opacity-100'
-                    } w-8 h-8 hover:scale-105 transition-all cursor-pointer`}
-                    onClick={() => {
-                        if (guess == 1) {
-                            setIsRunning(false);
-                            setInputs((prev) => {
-                                let tempInputs = [...prev];
-                                tempInputs.forEach((input) => {
-                                    input.text = '';
-                                    input.color = 'none';
+                <div className={`flex w-full justify-end transition-all ${!stopwatchVisible ? 'gap-[40%]' : 'gap-3 max-mablet:gap-2'}`}>
+                    <CirclePause
+                        className={`text-[#6207ad] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
+                        onClick={() => {
+                            if (isRunning) {
+                                setIsRunning(false);
+                                setIsOver(false);
+                                setGamePaused(true);
+                            }
+                        }}
+                        strokeWidth={2.5}
+                    />
+                    <RotateCcw
+                        className={`${guess == 1 ? 'text-[#10b710] cursor-pointer' : 'text-[#e2e0dd] cursor-not-allowed'} ${
+                            gamePaused ? 'opacity-0' : 'opacity-100'
+                        } w-8 h-8 hover:scale-105 transition-all cursor-pointer max-mablet:w-7 max-mablet:h-7`}
+                        onClick={() => {
+                            if (guess == 1) {
+                                setIsRunning(false);
+                                setInputs((prev) => {
+                                    let tempInputs = [...prev];
+                                    tempInputs.forEach((input) => {
+                                        input.text = '';
+                                        input.color = 'none';
+                                    });
+                                    return tempInputs;
                                 });
-                                return tempInputs;
-                            });
-                            elapsedTime = 0;
-                            setStopwatchTime('00:00:00.000');
-                        }
-                    }}
-                    strokeWidth={3}
-                />
+                                elapsedTime = 0;
+                                setStopwatchTime('00:00:00.000');
+                            }
+                        }}
+                        strokeWidth={2.5}
+                    />
+                </div>
             </div>
             <div className={`grid grid-cols-5 grid-rows-6 gap-1.5 justify-center mb-5`}>
-                {gamePaused && !isRunning && !isOver && <PausedModal restartGame={restartGame} />}
+                {gamePaused && !isRunning && !isOver && <PausedModal stopGame={stopGame} />}
                 {inputs.map((input: InputBox) => inputElement(input))}
             </div>
             <Keyboard handleKeyPress={handleKeyPress} />

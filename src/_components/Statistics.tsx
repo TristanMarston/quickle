@@ -59,14 +59,13 @@ const Statistics = () => {
         fastestTime: '00:00:00.000',
         winPercentage: 0,
     });
-    const [alertDialogOpened, setAlertDialogOpened] = useState(false);
+    // const [alertDialogOpened, setAlertDialogOpened] = useState(false);
 
     useEffect(() => {
         const gamesPlayedString = localStorage.getItem('gamesPlayed');
 
         if (gamesPlayedString !== null) {
             setPrevGames([...removeDuplicates(JSON.parse(gamesPlayedString) as Game[])]);
-            // setPrevGames([...(JSON.parse(gamesPlayedString) as Game[])]);
         }
     }, []);
 

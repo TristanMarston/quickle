@@ -1,7 +1,7 @@
 'use client';
 
 import { useGameContext } from '@/app/context';
-import { Pause, RotateCcw } from 'lucide-react';
+import { Pause, RotateCcw, X } from 'lucide-react';
 import { Fredoka } from 'next/font/google';
 
 const fredokaBold = Fredoka({ weight: '700', subsets: ['latin'] });
@@ -15,10 +15,10 @@ type InputBox = {
 };
 
 type Props = {
-    restartGame: () => void;
+    stopGame: (won: boolean) => void;
 };
 
-const PausedModal = ({ restartGame }: Props) => {
+const PausedModal = ({ stopGame }: Props) => {
     const context = useGameContext();
     if (context === undefined) {
         throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
@@ -55,10 +55,10 @@ const PausedModal = ({ restartGame }: Props) => {
                 </button>
                 <button
                     className={`${fredokaBold.className} cursor-pointer hover:bg-[#e6e6e6] tracking-[0.065em] text-lg w-full h-11 transition-all bg-white text-black rounded-full flex items-center justify-center gap-2 shadow-[4.0px_4.0px_5.0px_rgba(0,0,0,0.25)]`}
-                    onClick={restartGame}
+                    onClick={() => stopGame(false)}
                 >
-                    <RotateCcw />
-                    Restart
+                    <X />
+                    Give Up
                 </button>
             </div>
         </div>
