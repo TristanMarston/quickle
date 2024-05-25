@@ -154,8 +154,8 @@ const Statistics = () => {
                     { text: 'best streak', stat: formattedStats.bestStreak },
                 ].map((info) => (
                     <div className='flex flex-col justify-center items-center' key={info.text}>
-                        <p className={`${fredokaBold.className} text-3xl tracking-wider`}>{info.stat}</p>
-                        <p className={`${fredokaSemiBold.className} text-xl text-center`}>
+                        <p className={`${fredokaBold.className} text-3xl max-mablet:text-[1.65rem] tracking-wider`}>{info.stat}</p>
+                        <p className={`${fredokaSemiBold.className} text-xl max-mablet:text-base text-center`}>
                             {info.text.split(' ')[0]}
                             <br />
                             {info.text.split(' ')[1]}
@@ -179,12 +179,12 @@ const Statistics = () => {
             </div>
             <div className='flex justify-between'>
                 <div className='flex flex-col items-center w-full'>
-                    <h3 className={`${fredokaSemiBold.className} text-2xl`}>fastest time</h3>
-                    <h5 className={`${fredokaLight.className} text-lg`}>{formattedStats.fastestTime}</h5>
+                    <h3 className={`${fredokaSemiBold.className} text-2xl max-mablet:text-[1.35rem] max-mobile:text-xl`}>fastest time</h3>
+                    <h5 className={`${fredokaLight.className} text-lg max-mablet:text-base`}>{formattedStats.fastestTime}</h5>
                 </div>
                 <div className='flex flex-col items-center w-full'>
-                    <h3 className={`${fredokaSemiBold.className} text-2xl`}>average time</h3>
-                    <h5 className={`${fredokaLight.className} text-lg`}>{formattedStats.timesWon === 0 ? '00:00:00.000' : formattedStats.averageTime}</h5>
+                    <h3 className={`${fredokaSemiBold.className} text-2xl max-mablet:text-[1.35rem] max-mobile:text-xl`}>average time</h3>
+                    <h5 className={`${fredokaLight.className} text-lg max-mablet:text-base`}>{formattedStats.timesWon === 0 ? '00:00:00.000' : formattedStats.averageTime}</h5>
                 </div>
             </div>
             {/* <div className='flex gap-5 px-5 w-full'>

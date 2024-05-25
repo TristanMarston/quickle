@@ -481,7 +481,7 @@ const Game = () => {
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger
-                            className={`${nunitoLight.className} text-2xl cursor-pointer`}
+                            className={`${nunitoLight.className} text-2xl cursor-pointer select-none`}
                             onClick={() => {
                                 toast.success('Copied to Clipboard!', {
                                     duration: 3000,

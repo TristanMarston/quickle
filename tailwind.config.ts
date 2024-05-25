@@ -8,6 +8,7 @@ const config = {
         screens: {
             mobile: '400px',
             mablet: '450px',
+            tobile: '560px',
             tablet: '650px',
             taptop: '820px',
             laptop: '960px',
