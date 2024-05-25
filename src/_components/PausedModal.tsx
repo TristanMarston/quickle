@@ -55,7 +55,10 @@ const PausedModal = ({ stopGame }: Props) => {
                 </button>
                 <button
                     className={`${fredokaBold.className} cursor-pointer hover:bg-[#e6e6e6] tracking-[0.065em] text-lg w-full h-11 transition-all bg-white text-black rounded-full flex items-center justify-center gap-2 shadow-[4.0px_4.0px_5.0px_rgba(0,0,0,0.25)]`}
-                    onClick={() => stopGame(false)}
+                    onClick={() => {
+                        stopGame(false);
+                        localStorage.setItem('currentGame', 'null');
+                    }}
                 >
                     <X />
                     Give Up

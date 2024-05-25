@@ -386,7 +386,7 @@ const Game = () => {
                 failToast(`The word was ${finalWord.toUpperCase()}`);
             }
 
-            if (gamesPlayed.length <= 3) toast('Press [ENTER] to start a new game.', { duration: 6000, position: 'top-right', className: `${fredokaLight.className}` });
+            if (gamesPlayed.length <= 3) toast('Press [ENTER] to start a new game.', { duration: 3000, position: 'bottom-right', className: `${fredokaLight.className}` });
         },
         [stopwatchTime, currentGame]
     );
@@ -490,7 +490,6 @@ const Game = () => {
                     <X
                         className={`text-[#ed3a3a] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
                         onClick={() => {
-                            console.log('stopped');
                             if (isRunning && !gamePaused) stopGame(false);
                         }}
                         strokeWidth={2.5}

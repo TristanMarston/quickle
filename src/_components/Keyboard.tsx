@@ -32,7 +32,12 @@ const Keyboard = ({ handleKeyPress }: Props) => {
                 {key.key.toLowerCase() !== 'backspace' ? key.key.toUpperCase() : <Delete className='w-8 h-8' />}
             </div>
         ) : (
-            <div className={`${fredokaBold.className} ${size} bg-[#d3d6da] grid place-items-center font-extrabold cursor-pointer rounded-lg select-none h-12`}>
+            <div
+                className={`${fredokaBold.className} ${size} bg-[#d3d6da] grid place-items-center font-extrabold cursor-pointer rounded-lg select-none h-12`}
+                onClick={() => {
+                    if (key.key.toLowerCase() == 'enter') handleKeyPress(key.key.toUpperCase());
+                }}
+            >
                 {key.key.toLowerCase() !== 'backspace' ? key.key.toUpperCase() : <Delete className='w-8 h-8' />}
             </div>
         );
