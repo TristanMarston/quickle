@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { keyboardData } from '../../public/pagedata';
 
 type InputBox = {
@@ -42,6 +42,16 @@ type Context = {
     setModalOpened: React.Dispatch<React.SetStateAction<boolean>>;
     stopwatchVisible: boolean;
     setStopwatchVisible: React.Dispatch<React.SetStateAction<boolean>>;
+    darkMode: boolean;
+    setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
+    settingsModalOpened: boolean;
+    setSettingsModalOpened: React.Dispatch<React.SetStateAction<boolean>>;
+    hardMode: boolean;
+    setHardMode: React.Dispatch<React.SetStateAction<boolean>>;
+    shownStats: string;
+    setShownStats: React.Dispatch<React.SetStateAction<string>>;
+    isOver: boolean;
+    setIsOver: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 // Create the context
@@ -64,6 +74,45 @@ export const GameProvider = ({ children }: any) => {
     const [prevGames, setPrevGames] = useState<Game[]>([]);
     const [modalOpened, setModalOpened] = useState(false);
     const [stopwatchVisible, setStopwatchVisible] = useState(true);
+    const [settingsModalOpened, setSettingsModalOpened] = useState(false);
+    const [hardMode, setHardMode] = useState(false);
+    const [shownStats, setShownStats] = useState('total');
+    const [isOver, setIsOver] = useState(false);
+
+    const [darkMode, setDarkMode] = useState(false);
+
+    useEffect(() => {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') setDarkMode(true);
+
+        const isHard = localStorage.getItem('hardMode');
+        if (isHard === 'true') setHardMode(true);
+
+        const sessionID = generateID(Math.random() * 10 + 5);
+        sessionStorage.setItem('sessionID', sessionID);
+    }, []);
+
+    useEffect(() => {
+        if (darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    }, [darkMode]);
+
+    useEffect(() => {
+        if (hardMode) localStorage.setItem('hardMode', 'true');
+        else localStorage.setItem('hardMode', 'false');
+    }, [hardMode]);
+
+    const generateID = (length: number) => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) result += characters.charAt(Math.floor(Math.random() * characters.length));
+        return result;
+    };
 
     return (
         <GameContext.Provider
@@ -84,6 +133,16 @@ export const GameProvider = ({ children }: any) => {
                 setModalOpened,
                 stopwatchVisible,
                 setStopwatchVisible,
+                darkMode,
+                setDarkMode,
+                settingsModalOpened,
+                setSettingsModalOpened,
+                hardMode,
+                setHardMode,
+                shownStats,
+                setShownStats,
+                isOver,
+                setIsOver,
             }}
         >
             {children}

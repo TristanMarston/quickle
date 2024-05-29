@@ -22,7 +22,14 @@ const Keyboard = ({ handleKeyPress }: Props) => {
     const { keyboard, setKeyboard, gamePaused } = context;
 
     const keyboardElement = (key: Key) => {
-        const color = key.color === 'green' ? 'bg-[#6aaa64]' : key.color === 'yellow' ? 'bg-[#c9b458]' : key.color === 'gray' ? 'bg-[#787c7e]' : 'bg-[#d3d6da]';
+        const color =
+            key.color === 'green'
+                ? 'bg-[#6aaa64]'
+                : key.color === 'yellow'
+                ? 'bg-[#c9b458]'
+                : key.color === 'gray'
+                ? 'bg-[#787c7e] dark:bg-gray-700 dark:text-foreground'
+                : 'bg-[#d3d6da] dark:bg-gray-500 dark:text-foreground';
         const textColor = key.color === 'none' ? 'text-black' : 'text-white';
         const size = key.key.toLowerCase() === 'enter' || key.key.toLowerCase() === 'backspace' ? 'w-16 text-base max-mablet:text-sm' : 'w-12 text-2xl max-mablet:text-xl';
         const className = `${fredokaBold.className} ${color} ${textColor} ${size} grid place-items-center font-extrabold cursor-pointer rounded-lg select-none h-12`;
@@ -33,7 +40,7 @@ const Keyboard = ({ handleKeyPress }: Props) => {
             </div>
         ) : (
             <div
-                className={`${fredokaBold.className} ${size} bg-[#d3d6da] grid place-items-center font-extrabold cursor-pointer rounded-lg select-none h-12`}
+                className={`${fredokaBold.className} ${size} bg-[#d3d6da] dark:bg-gray-500 grid place-items-center font-extrabold cursor-pointer rounded-lg select-none h-12`}
                 onClick={() => {
                     if (key.key.toLowerCase() == 'enter') handleKeyPress(key.key.toUpperCase());
                 }}

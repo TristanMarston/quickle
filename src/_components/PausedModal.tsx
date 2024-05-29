@@ -37,14 +37,14 @@ const PausedModal = ({ stopGame }: Props) => {
                             ? 'bg-[#c9b458]'
                             : box.color.toLowerCase() == 'gray'
                             ? 'bg-[#787c7e]'
-                            : '';
+                            : 'dark:border-gray-400';
 
                     return <div key={box.id} className={`w-6 h-6 border border-black shadow-sm ${color}`}></div>;
                 })}
             </div>
             <div className='flex gap-5 px-5 w-full'>
                 <button
-                    className={`${fredokaBold.className} cursor-pointer hover:bg-[#4d4d4d] tracking-[0.065em] text-lg w-full h-11 transition-all bg-black text-white rounded-full flex items-center justify-center gap-2 shadow-[4.0px_4.0px_5.0px_rgba(0,0,0,0.25)]`}
+                    className={`${fredokaBold.className} cursor-pointer hover:bg-[#4d4d4d] dark:bg-foreground dark:text-background dark:hover:bg-white tracking-[0.065em] text-lg w-full h-11 transition-all bg-black text-white rounded-full flex items-center justify-center gap-2 shadow-[4.0px_4.0px_5.0px_rgba(0,0,0,0.25)]`}
                     onClick={() => {
                         setIsRunning(true);
                         setGamePaused(false);
@@ -54,7 +54,7 @@ const PausedModal = ({ stopGame }: Props) => {
                     Resume
                 </button>
                 <button
-                    className={`${fredokaBold.className} cursor-pointer hover:bg-[#e6e6e6] tracking-[0.065em] text-lg w-full h-11 transition-all bg-white text-black rounded-full flex items-center justify-center gap-2 shadow-[4.0px_4.0px_5.0px_rgba(0,0,0,0.25)]`}
+                    className={`${fredokaBold.className} cursor-pointer hover:bg-[#e6e6e6] dark:bg-background dark:text-foreground dark:hover:bg-[#4d4d4d] tracking-[0.065em] text-lg w-full h-11 transition-all bg-white text-black rounded-full flex items-center justify-center gap-2 shadow-[4.0px_4.0px_5.0px_rgba(0,0,0,0.25)]`}
                     onClick={() => {
                         stopGame(false);
                         localStorage.setItem('currentGame', 'null');
