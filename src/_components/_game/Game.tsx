@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { keyboardData, words } from '../../public/pagedata';
+import { keyboardData, words } from '../../../public/pagedata';
 import { CirclePause, Delete, Eye, EyeOff, Pause, RotateCcw, X } from 'lucide-react';
 import { Fredoka, Nunito } from 'next/font/google';
 import toast from 'react-hot-toast';
-import PausedModal from './PausedModal';
+import PausedModal from './Paused';
 import Keyboard from './Keyboard';
 import { useGameContext } from '@/app/context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
