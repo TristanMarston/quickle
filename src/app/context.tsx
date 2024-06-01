@@ -59,6 +59,10 @@ type Context = {
     setShownStats: React.Dispatch<React.SetStateAction<string>>;
     isOver: boolean;
     setIsOver: React.Dispatch<React.SetStateAction<boolean>>;
+    stopwatchTime: string;
+    setStopwatchTime: React.Dispatch<React.SetStateAction<string>>;
+    guess: number;
+    setGuess: React.Dispatch<React.SetStateAction<number>>;
 };
 
 // helper functions
@@ -133,6 +137,8 @@ export const GameProvider = ({ children }: any) => {
     const [hardMode, setHardMode] = useState(false);
     const [shownStats, setShownStats] = useState('total');
     const [isOver, setIsOver] = useState(false);
+    const [stopwatchTime, setStopwatchTime] = useState<string>('00:00:00.000');
+    const [guess, setGuess] = useState(1);
 
     const [darkMode, setDarkMode] = useState(false);
 
@@ -191,6 +197,10 @@ export const GameProvider = ({ children }: any) => {
                 setShownStats,
                 isOver,
                 setIsOver,
+                stopwatchTime,
+                setStopwatchTime,
+                guess,
+                setGuess
             }}
         >
             {children}

@@ -2,17 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { words } from '../../../public/pagedata';
-import { CirclePause, Eye, EyeOff, RotateCcw, X } from 'lucide-react';
 import { Fredoka, Nunito } from 'next/font/google';
 import toast from 'react-hot-toast';
 import PausedModal from './Paused';
 import Keyboard from './Keyboard';
 import { useGameContext } from '@/app/context';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { InputBox, Key, Game, generateID, formatTime, parseTime, failToast, successToast, fredokaLight } from '@/app/context';
+import { InputBox, Key, Game, generateID, failToast, successToast, fredokaLight } from '@/app/context';
+import UtilityButtons from './UtilityButtons';
 
 const fredokaSemibold = Fredoka({ weight: '600', subsets: ['latin'] });
-const nunitoLight = Nunito({ weight: '500', subsets: ['latin'] });
 
 let finalWord = words[Math.floor(Math.random() * 2500)].toUpperCase();
 
@@ -37,12 +35,13 @@ const QuickleGame = () => {
         hardMode,
         isOver,
         setIsOver,
+        stopwatchTime,
+        setStopwatchTime,
+        guess,
+        setGuess,
     } = context;
 
-    const [guess, setGuess] = useState(1);
-    const [stopwatchTime, setStopwatchTime] = useState<string>('00:00:00.000');
     const [currentGame, setCurrentGame] = useState<Game>({ guess: guess, guesses: [''], finalWord: finalWord, stopwatch: stopwatchTime });
-    let elapsedTime = 0;
 
     useEffect(() => {
         const gamesPlayedString = localStorage.getItem('gamesPlayed');
@@ -84,7 +83,6 @@ const QuickleGame = () => {
                 if (game !== null) {
                     setGamePaused(true);
                     setStopwatchTime(game.stopwatch);
-                    elapsedTime = parseTime(game.stopwatch);
                     finalWord = game.finalWord;
 
                     setInputs((prev: InputBox[]) => {
@@ -120,10 +118,6 @@ const QuickleGame = () => {
             } catch (err) {}
         }
     }, []);
-
-    useEffect(() => {
-        elapsedTime = parseTime(stopwatchTime);
-    }, [stopwatchTime]);
 
     useEffect(() => {
         if (!isRunning && isOver) {
@@ -253,40 +247,6 @@ const QuickleGame = () => {
 
         return result;
     };
-
-    useEffect(() => {
-        let intervalId: any = null;
-
-        if (isRunning) {
-            intervalId = setInterval(() => {
-                const gameString: string | null = localStorage.getItem('currentGame');
-                let game: Game;
-                if (gameString != null) {
-                    game = JSON.parse(gameString) as Game;
-                    if (game != null) {
-                        const currentStopwatch = game.stopwatch;
-                        if (currentStopwatch != null) elapsedTime = parseTime(currentStopwatch);
-                    }
-                }
-
-                elapsedTime += 10;
-                setStopwatchTime(() => {
-                    if (gameString != null && game != null) {
-                        game.stopwatch = formatTime(elapsedTime);
-                        localStorage.setItem('currentGame', JSON.stringify(game));
-                    }
-
-                    return formatTime(elapsedTime);
-                });
-            }, 10);
-        } else {
-            clearInterval(intervalId);
-        }
-
-        return () => {
-            clearInterval(intervalId);
-        };
-    }, [isRunning]);
 
     const stopGame = useCallback(
         (won: boolean) => {
@@ -492,84 +452,7 @@ const QuickleGame = () => {
 
     return (
         <div className='mt-3 flex flex-col justify-center items-center'>
-            <div className='flex justify-between items-center mb-3 w-[344px] max-mablet:w-[304px]'>
-                <div className={`flex w-full transition-all ${!stopwatchVisible ? 'gap-[40%]' : 'gap-3 max-mablet:gap-2'}`}>
-                    <X
-                        className={`text-[#ed3a3a] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
-                        onClick={() => {
-                            if (isRunning && !gamePaused) stopGame(false);
-                        }}
-                        strokeWidth={2.5}
-                    />
-                    {stopwatchVisible ? (
-                        <Eye
-                            className={`text-[#076cad] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
-                            onClick={() => setStopwatchVisible(false)}
-                            strokeWidth={2.5}
-                        />
-                    ) : (
-                        <EyeOff
-                            className={`text-[#076cad] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
-                            onClick={() => setStopwatchVisible(true)}
-                            strokeWidth={2.5}
-                        />
-                    )}
-                </div>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger
-                            className={`${nunitoLight.className} ${!stopwatchVisible ? 'hidden' : 'block'} text-2xl cursor-pointer select-none`}
-                            onClick={() => {
-                                toast.success('Copied to Clipboard!', {
-                                    duration: 3000,
-                                    position: 'bottom-right',
-                                    className: `${fredokaLight.className}`,
-                                });
-                                navigator.clipboard.writeText(stopwatchTime);
-                            }}
-                        >
-                            {stopwatchTime}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p className={`${fredokaLight.className}`}>copy to clipboard</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-                <div className={`flex w-full justify-end transition-all ${!stopwatchVisible ? 'gap-[40%]' : 'gap-3 max-mablet:gap-2'}`}>
-                    <CirclePause
-                        className={`text-[#6207ad] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
-                        onClick={() => {
-                            if (isRunning) {
-                                setIsRunning(false);
-                                setIsOver(false);
-                                setGamePaused(true);
-                            }
-                        }}
-                        strokeWidth={2.5}
-                    />
-                    <RotateCcw
-                        className={`${guess == 1 ? 'text-[#10b710] cursor-pointer' : 'text-[#e2e0dd] cursor-not-allowed'} ${
-                            gamePaused ? 'opacity-0' : 'opacity-100'
-                        } w-8 h-8 hover:scale-105 transition-all cursor-pointer max-mablet:w-7 max-mablet:h-7`}
-                        onClick={() => {
-                            if (guess == 1) {
-                                setIsRunning(false);
-                                setInputs((prev) => {
-                                    let tempInputs = [...prev];
-                                    tempInputs.forEach((input) => {
-                                        input.text = '';
-                                        input.color = 'none';
-                                    });
-                                    return tempInputs;
-                                });
-                                elapsedTime = 0;
-                                setStopwatchTime('00:00:00.000');
-                            }
-                        }}
-                        strokeWidth={2.5}
-                    />
-                </div>
-            </div>
+            <UtilityButtons stopGame={stopGame} />
             <div className={`grid grid-cols-5 grid-rows-6 gap-1.5 justify-center mb-5`}>
                 {gamePaused && !isRunning && !isOver && <PausedModal stopGame={stopGame} />}
                 {inputs.map((input: InputBox) => inputElement(input))}
