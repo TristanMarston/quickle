@@ -2,27 +2,34 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { keyboardData } from '../../public/pagedata';
+import toast from 'react-hot-toast';
+import { Fredoka } from 'next/font/google';
 
-type InputBox = {
+export const fredokaLight = Fredoka({ weight: '400', subsets: ['latin'] });
+export const fredokaBold = Fredoka({ weight: '700', subsets: ['latin'] });
+
+export type InputBox = {
     id: number;
     text: string;
     locked: boolean;
     color: string;
 };
 
-type Key = {
+export type Key = {
     key: string;
     color: string;
     class?: string;
 };
 
-type Game = {
+export type Game = {
     guess: number;
     guesses: string[];
     finalWord: string;
     stopwatch: string;
     won?: boolean;
     id?: string;
+    hardMode?: boolean;
+    sessionID?: string | null | undefined;
 };
 
 type Context = {
@@ -52,6 +59,54 @@ type Context = {
     setShownStats: React.Dispatch<React.SetStateAction<string>>;
     isOver: boolean;
     setIsOver: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+// helper functions
+export const generateID = (length: number) => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) result += characters.charAt(Math.floor(Math.random() * characters.length));
+    return result;
+};
+
+export const formatTime = (elapsedTime: number) => {
+    let milliseconds = Math.floor((elapsedTime % 1000) / 10);
+    let seconds = Math.floor((elapsedTime % 60000) / 1000);
+    let minutes = Math.floor((elapsedTime % 3600000) / 60000);
+    let hours = Math.floor(elapsedTime / 3600000);
+    return (
+        (hours ? (hours > 9 ? hours : '0' + hours) : '00') +
+        ':' +
+        (minutes ? (minutes > 9 ? minutes : '0' + minutes) : '00') +
+        ':' +
+        (seconds ? (seconds > 9 ? seconds : '0' + seconds) : '00') +
+        '.' +
+        (milliseconds > 9 ? milliseconds + '0' : '0' + milliseconds + '0')
+    );
+};
+
+export const parseTime = (duration: string): number => {
+    const [time, milliseconds] = duration.split('.');
+    const [hours, minutes, seconds] = time.split(':').map(Number);
+    const mil = parseInt(milliseconds.slice(0, 2), 10);
+
+    return hours * 3600000 + minutes * 60000 + seconds * 1000 + mil * 10;
+};
+
+export const failToast = (message: string) => {
+    toast.error(message, {
+        duration: 2000,
+        position: 'top-center',
+        className: `${fredokaBold.className} text-white text-lg`,
+    });
+};
+
+export const successToast = (message: string) => {
+    toast.success(message, {
+        duration: 2000,
+        position: 'top-center',
+        className: `${fredokaBold.className} text-white text-lg`,
+    });
 };
 
 // Create the context
@@ -106,13 +161,6 @@ export const GameProvider = ({ children }: any) => {
         if (hardMode) localStorage.setItem('hardMode', 'true');
         else localStorage.setItem('hardMode', 'false');
     }, [hardMode]);
-
-    const generateID = (length: number) => {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) result += characters.charAt(Math.floor(Math.random() * characters.length));
-        return result;
-    };
 
     return (
         <GameContext.Provider

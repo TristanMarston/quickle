@@ -1,21 +1,18 @@
-import { Dialog, DialogClose, DialogContent, DialogOverlay, DialogTrigger } from '@/components/ui/dialog';
-import { BarChart2, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogOverlay, DialogTrigger } from '@/components/ui/dialog';
+import { BarChart2 } from 'lucide-react';
 import { SlidersHorizontal } from 'lucide-react';
 import { Fredoka } from 'next/font/google';
 import Statistics from './_statistics/Statistics';
 import { useGameContext } from '@/app/context';
 import Settings from './_settings/Settings';
-import { useEffect } from 'react';
 
 const fredoka = Fredoka({ weight: '600', subsets: ['latin'] });
 
 const Navbar = () => {
     const context = useGameContext();
-    if (context === undefined) {
-        throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
-    }
+    if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
 
-    const { modalOpened, setModalOpened, setGamePaused, settingsModalOpened, setSettingsModalOpened } = context;
+    const { modalOpened, setModalOpened, settingsModalOpened, setSettingsModalOpened } = context;
 
     return (
         <div className='w-full flex justify-center'>

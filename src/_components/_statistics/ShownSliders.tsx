@@ -1,15 +1,13 @@
-import { useGameContext } from '@/app/context';
+import { useGameContext, fredokaBold } from '@/app/context';
 import { motion } from 'framer-motion';
-import { Fredoka } from 'next/font/google';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 
-const fredokaBold = Fredoka({ weight: '700', subsets: ['latin'] });
 const tabs = ['total', 'normal', 'hard', 'session'];
 
 const ShownSliders = () => {
     const context = useGameContext();
     if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
-    const { shownStats, setShownStats, isOver } = context;
+    const { shownStats, setShownStats } = context;
 
     return (
         <div className='flex items-center justify-between w-full flex-wrap rounded-full border-2 border-black dark:border-foreground'>

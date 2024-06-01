@@ -1,24 +1,10 @@
 'use client';
 
-import { useGameContext } from '@/app/context';
-import { Pause, RotateCcw, X } from 'lucide-react';
-import { Fredoka } from 'next/font/google';
+import { useGameContext, fredokaBold } from '@/app/context';
+import { Pause, X } from 'lucide-react';
+import { InputBox } from '@/app/context';
 
-const fredokaBold = Fredoka({ weight: '700', subsets: ['latin'] });
-const fredokaLight = Fredoka({ weight: '400', subsets: ['latin'] });
-
-type InputBox = {
-    id: number;
-    text: string;
-    locked: boolean;
-    color: string;
-};
-
-type Props = {
-    stopGame: (won: boolean) => void;
-};
-
-const PausedModal = ({ stopGame }: Props) => {
+const PausedModal = ({ stopGame }: { stopGame: (won: boolean) => void }) => {
     const context = useGameContext();
     if (context === undefined) {
         throw new Error('useContext(GameContext) must be used within a GameContext.Provider');

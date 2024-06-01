@@ -1,36 +1,13 @@
 'use client';
 
 import { useGameContext } from '@/app/context';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Power, RotateCcw, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Fredoka } from 'next/font/google';
 import { useEffect, useState } from 'react';
 import ShownSliders from './ShownSliders';
+import { Game, formatTime, parseTime, fredokaBold, fredokaLight } from '@/app/context';
 
-const fredokaBold = Fredoka({ weight: '700', subsets: ['latin'] });
 const fredokaSemiBold = Fredoka({ weight: '500', subsets: ['latin'] });
-const fredokaLight = Fredoka({ weight: '400', subsets: ['latin'] });
-
-type Game = {
-    guess: number;
-    guesses: string[];
-    finalWord: string;
-    stopwatch: string;
-    won?: boolean;
-    id?: string;
-    hardMode?: boolean;
-    sessionID?: string;
-};
 
 type Stats = {
     guessNumbers: [number, number, number, number, number, number];
@@ -47,11 +24,9 @@ type Stats = {
 
 const Statistics = () => {
     const context = useGameContext();
-    if (context === undefined) {
-        throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
-    }
+    if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
 
-    const { prevGames, setPrevGames, modalOpened, setModalOpened, shownStats, setShownStats } = context;
+    const { prevGames, setPrevGames, setModalOpened, shownStats } = context;
     const [formattedStats, setFormattedStats] = useState<Stats>({
         guessNumbers: [0, 0, 0, 0, 0, 0],
         currentStreak: 0,
@@ -64,7 +39,6 @@ const Statistics = () => {
         winPercentage: 0,
         statType: 'normal',
     });
-    const [alertDialogOpened, setAlertDialogOpened] = useState(false);
 
     useEffect(() => {
         const gamesPlayedString = localStorage.getItem('gamesPlayed');
@@ -122,30 +96,6 @@ const Statistics = () => {
     }, [prevGames, shownStats]);
 
     useEffect(() => console.log(formattedStats.guessNumbers.length), [formattedStats]);
-
-    const formatTime = (elapsedTime: number) => {
-        let milliseconds = Math.floor((elapsedTime % 1000) / 10);
-        let seconds = Math.floor((elapsedTime % 60000) / 1000);
-        let minutes = Math.floor((elapsedTime % 3600000) / 60000);
-        let hours = Math.floor(elapsedTime / 3600000);
-        return (
-            (hours ? (hours > 9 ? hours : '0' + hours) : '00') +
-            ':' +
-            (minutes ? (minutes > 9 ? minutes : '0' + minutes) : '00') +
-            ':' +
-            (seconds ? (seconds > 9 ? seconds : '0' + seconds) : '00') +
-            '.' +
-            (milliseconds > 9 ? milliseconds + '0' : '0' + milliseconds + '0')
-        );
-    };
-
-    const parseTime = (duration: string): number => {
-        const [time, milliseconds] = duration.split('.');
-        const [hours, minutes, seconds] = time.split(':').map(Number);
-        const mil = parseInt(milliseconds.slice(0, 2), 10);
-
-        return hours * 3600000 + minutes * 60000 + seconds * 1000 + mil * 10;
-    };
 
     const removeDuplicates = (games: Game[]): Game[] => {
         const seenIds = new Map<string | undefined, Game>();
@@ -210,32 +160,6 @@ const Statistics = () => {
                     <h5 className={`${fredokaLight.className} text-lg max-mablet:text-base`}>{formattedStats.timesWon === 0 ? '00:00:00.000' : formattedStats.averageTime}</h5>
                 </div>
             </div>
-            {/* <div className='flex gap-5 px-5 w-full'>
-                <AlertDialog open={alertDialogOpened} onOpenChange={setAlertDialogOpened}>
-                    <AlertDialogTrigger
-                        className={`${fredokaBold.className} cursor-pointer hover:bg-[#4d4d4d] tracking-[0.065em] text-lg w-full h-11 transition-all bg-black text-white rounded-full flex items-center justify-center gap-2 shadow-[4.0px_4.0px_5.0px_rgba(0,0,0,0.25)]`}
-                        onClick={() => {
-                            setModalOpened(false);
-                            setAlertDialogOpened(true);
-                        }}
-                    >
-                        <RotateCcw />
-                        Reset Stats
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className={`${fredokaLight.className}`}>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction>Continue</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-                <button
-                    className={`${fredokaBold.className} cursor-pointer hover:bg-[#e6e6e6] tracking-[0.065em] text-lg w-full h-11 transition-all bg-white text-black rounded-full flex items-center justify-center gap-2 shadow-[4.0px_4.0px_5.0px_rgba(0,0,0,0.25)]`}
-                >
-                    <Power />
-                    Start Session
-                </button>
-            </div> */}
             <ShownSliders />
         </div>
     );

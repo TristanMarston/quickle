@@ -1,51 +1,24 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { keyboardData, words } from '../../../public/pagedata';
-import { CirclePause, Delete, Eye, EyeOff, Pause, RotateCcw, X } from 'lucide-react';
+import { words } from '../../../public/pagedata';
+import { CirclePause, Eye, EyeOff, RotateCcw, X } from 'lucide-react';
 import { Fredoka, Nunito } from 'next/font/google';
 import toast from 'react-hot-toast';
 import PausedModal from './Paused';
 import Keyboard from './Keyboard';
 import { useGameContext } from '@/app/context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InputBox, Key, Game, generateID, formatTime, parseTime, failToast, successToast, fredokaLight } from '@/app/context';
 
-const fredokaLight = Fredoka({ weight: '400', subsets: ['latin'] });
-const fredokaBold = Fredoka({ weight: '600', subsets: ['latin'] });
+const fredokaSemibold = Fredoka({ weight: '600', subsets: ['latin'] });
 const nunitoLight = Nunito({ weight: '500', subsets: ['latin'] });
 
-type InputBox = {
-    id: number;
-    text: string;
-    locked: boolean;
-    color: string;
-};
-
-type Key = {
-    key: string;
-    color: string;
-    class?: string;
-};
-
-type Game = {
-    guess: number;
-    guesses: string[];
-    finalWord: string;
-    stopwatch: string;
-    won?: boolean;
-    id?: string;
-    hardMode?: boolean;
-    sessionID?: string | null | undefined;
-};
-
 let finalWord = words[Math.floor(Math.random() * 2500)].toUpperCase();
-// let finalWord = 'outdo';
 
-const Game = () => {
+const QuickleGame = () => {
     const context = useGameContext();
-    if (context === undefined) {
-        throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
-    }
+    if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
     const {
         isRunning,
         setIsRunning,
@@ -53,16 +26,13 @@ const Game = () => {
         setGamePaused,
         inputs,
         setInputs,
-        keyboard,
         setKeyboard,
         gamesPlayed,
         setGamesPlayed,
         setPrevGames,
-        modalOpened,
         setModalOpened,
         stopwatchVisible,
         setStopwatchVisible,
-        settingsModalOpened,
         setSettingsModalOpened,
         hardMode,
         isOver,
@@ -284,37 +254,6 @@ const Game = () => {
         return result;
     };
 
-    const formatTime = (elapsedTime: number) => {
-        let milliseconds = Math.floor((elapsedTime % 1000) / 10);
-        let seconds = Math.floor((elapsedTime % 60000) / 1000);
-        let minutes = Math.floor((elapsedTime % 3600000) / 60000);
-        let hours = Math.floor(elapsedTime / 3600000);
-        return (
-            (hours ? (hours > 9 ? hours : '0' + hours) : '00') +
-            ':' +
-            (minutes ? (minutes > 9 ? minutes : '0' + minutes) : '00') +
-            ':' +
-            (seconds ? (seconds > 9 ? seconds : '0' + seconds) : '00') +
-            '.' +
-            (milliseconds > 9 ? milliseconds + '0' : '0' + milliseconds + '0')
-        );
-    };
-
-    const parseTime = (duration: string): number => {
-        const [time, milliseconds] = duration.split('.');
-        const [hours, minutes, seconds] = time.split(':').map(Number);
-        const mil = parseInt(milliseconds.slice(0, 2), 10);
-
-        return hours * 3600000 + minutes * 60000 + seconds * 1000 + mil * 10;
-    };
-
-    const generateID = (length: number) => {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) result += characters.charAt(Math.floor(Math.random() * characters.length));
-        return result;
-    };
-
     useEffect(() => {
         let intervalId: any = null;
 
@@ -441,22 +380,6 @@ const Game = () => {
         return null;
     }
 
-    const failToast = (message: string) => {
-        toast.error(message, {
-            duration: 2000,
-            position: 'top-center',
-            className: `${fredokaBold.className} text-white text-lg`,
-        });
-    };
-
-    const successToast = (message: string) => {
-        toast.success(message, {
-            duration: 2000,
-            position: 'top-center',
-            className: `${fredokaBold.className} text-white text-lg`,
-        });
-    };
-
     const removeDuplicates = (games: Game[]): Game[] => {
         const seenIds = new Map<string | undefined, Game>();
 
@@ -546,7 +469,7 @@ const Game = () => {
                     : input.color === 'selected'
                     ? 'border-[#878a8c] bg-white text-black dark:bg-gray-700 dark:border-gray-500 dark:text-foreground animate-pop'
                     : 'border-[#d3d6da] bg-white text-black dark:bg-gray-700 dark:border-gray-600';
-            const className = `${fredokaBold.className} ${
+            const className = `${fredokaSemibold.className} ${
                 gamePaused && !isRunning && !isOver ? `blur opacity-15` : ''
             } w-16 h-16 max-mablet:w-14 max-mablet:h-14 rounded grid place-items-center border-2 select-none font-black text-4xl max-mablet:text-[2rem] ${color}`;
 
@@ -612,9 +535,6 @@ const Game = () => {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                {/* <div className={`${nunitoLight.className} text-2xl cursor-pointer`} onClick={() => navigator.clipboard.writeText(stopwatchTime)}>
-                    {stopwatchTime}
-                </div> */}
                 <div className={`flex w-full justify-end transition-all ${!stopwatchVisible ? 'gap-[40%]' : 'gap-3 max-mablet:gap-2'}`}>
                     <CirclePause
                         className={`text-[#6207ad] w-8 h-8 max-mablet:w-7 max-mablet:h-7 hover:scale-105 transition-all cursor-pointer ${gamePaused ? 'opacity-0' : 'opacity-100'}`}
@@ -659,4 +579,4 @@ const Game = () => {
     );
 };
 
-export default Game;
+export default QuickleGame;

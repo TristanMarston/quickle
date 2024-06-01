@@ -1,8 +1,4 @@
-type Key = {
-    key: string;
-    color: string;
-    class?: string;
-};
+import { Key } from '@/app/context';
 
 export const keyboardData: Key[][] = [
     [

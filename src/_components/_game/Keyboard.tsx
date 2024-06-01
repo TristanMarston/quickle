@@ -1,25 +1,12 @@
-import { useGameContext } from '@/app/context';
+import { useGameContext, fredokaBold } from '@/app/context';
 import { Delete } from 'lucide-react';
-import { Fredoka } from 'next/font/google';
+import { Key } from '@/app/context';
 
-const fredokaBold = Fredoka({ weight: '700', subsets: ['latin'] });
-
-type Props = {
-    handleKeyPress: (e: KeyboardEvent | string) => void;
-};
-
-type Key = {
-    key: string;
-    color: string;
-    class?: string;
-};
-
-const Keyboard = ({ handleKeyPress }: Props) => {
+const Keyboard = ({ handleKeyPress }: { handleKeyPress: (e: KeyboardEvent | string) => void }) => {
     const context = useGameContext();
-    if (context === undefined) {
-        throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
-    }
-    const { keyboard, setKeyboard, gamePaused } = context;
+    if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
+
+    const { keyboard, gamePaused } = context;
 
     const keyboardElement = (key: Key) => {
         const color =
