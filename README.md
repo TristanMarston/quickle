@@ -92,14 +92,14 @@ Here, I am using the exported function `useGameContext()` to access all the glob
 
 Another instance of my inheritance in this project is in `src/_components/_game/Game.tsx`, which is a massive file boasting 500+ lines of code. To condense this, I created 3 branching files of the `Game.tsx` file, namely `Keyboard.tsx`, `UtilityButtons.tsx`, and `Paused.tsx`, which lighten the burden on the one `Game.tsx` file by breaking up each part into different files.
 
-Further, I have a couple helper functions in context.tsx, like `generateID`, `failToast`, `successToast`, `parseTime`, `formatTime`. All of these functions are exported from context.tsx, and all the children of the `GameContext` provider can import these functions and use them without having to rewrite code.
+Further, I have a couple helper functions in context.tsx, like `generateID`, `failToast`, `successToast`, `parseTime`, `formatTime`, `removeDuplicates`. All of these functions are exported from context.tsx, and all the children of the `GameContext` provider can import these functions and use them without having to rewrite code.
 
 ### Documentation with Comments
 **Description** - I can document changes to program structure and list descriptors for other developers to analyze and adjust my written code.
 
 **My Documentation**
 
-A lot of my documentation is in this README.md file, which explains how the project works. To see the documentation for my actual code, follow this order of files for easiest grading (from parent to children):
+A lot of my documentation is in this README.md file, which explains how the project works. To see the documentation for my actual code, follow this order of files for easiest grading (from parent to children, these are the files which hold 99% of the logic):
 
 1. `src/app/context.tsx`
 2. `src/app/page.tsx`
@@ -109,10 +109,8 @@ A lot of my documentation is in this README.md file, which explains how the proj
 6. `src/_components/_game/Paused.tsx`
 7. `src/_components/Navbar.tsx`
 8. `src/_components/_settings/Settings.tsx`
-9. `src/_components/_statistics/Statistics.tsx`
-10. `src/_components/_statistics/ShownSliders.tsx`
-
-
+9. `src/_components/_statistics/ShownSliders.tsx`
+10. `src/_components/_statistics/Statistics.tsx`
 
 ### User Interactability
 **Description** - I can create programs that are designed with the user in mind. My programs add to the human experience by providing entertainment or education, account for human error, and perform tasks on behalf of humans.

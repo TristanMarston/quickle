@@ -70,6 +70,12 @@ type Context = {
 };
 
 // helper functions, exported to use anywhere in project
+
+/* 
+    this helper function generates a random id with a length of whatever is passed
+    as a parameter to the generateID function. this generateID helper function is used
+    to generate id's for the session and games to ensure there are no duplicates
+*/
 export const generateID = (length: number) => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -77,6 +83,11 @@ export const generateID = (length: number) => {
     return result;
 };
 
+/*
+    this helper function removes any duplicate games from a games (Game[])
+    array using the assigned ID's in the stopGame() function, returning the games array without
+    any duplicate games. 
+*/
 export const removeDuplicates = (games: Game[]): Game[] => {
     const seenIds = new Map<string | undefined, Game>();
 
@@ -88,6 +99,12 @@ export const removeDuplicates = (games: Game[]): Game[] => {
     return Array.from(seenIds.values());
 };
 
+
+/* 
+    this helper function takes in a number of milliseconds, and formats it like 
+    this: "hr:mn:sc:mil". So, if a minute has passed, it will format it to "00:01:00.000"
+    
+*/
 export const formatTime = (elapsedTime: number) => {
     let milliseconds = Math.floor((elapsedTime % 1000) / 10);
     let seconds = Math.floor((elapsedTime % 60000) / 1000);
@@ -104,6 +121,11 @@ export const formatTime = (elapsedTime: number) => {
     );
 };
 
+/* 
+    this helper function reverses the previous one, by taking in a formatted string, then
+    returning the number of milliseconds that have passed. all times will be formatted in
+    the same way, so i don't have to worry about this specific parsing of the string not working
+*/
 export const parseTime = (duration: string): number => {
     const [time, milliseconds] = duration.split('.');
     const [hours, minutes, seconds] = time.split(':').map(Number);
@@ -112,6 +134,7 @@ export const parseTime = (duration: string): number => {
     return hours * 3600000 + minutes * 60000 + seconds * 1000 + mil * 10;
 };
 
+// this helper function takes in a string message, then displays a toast with an "X", representing failure
 export const failToast = (message: string) => {
     toast.error(message, {
         duration: 2000,
@@ -120,6 +143,7 @@ export const failToast = (message: string) => {
     });
 };
 
+// this helper function takes in a string message, then displays a toast with a check, representing success
 export const successToast = (message: string) => {
     toast.success(message, {
         duration: 2000,

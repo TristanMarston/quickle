@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import PausedModal from './Paused';
 import Keyboard from './Keyboard';
 import { useGameContext } from '@/app/context';
-import { InputBox, Key, Game, generateID, failToast, successToast, fredokaLight } from '@/app/context';
+import { InputBox, Key, Game, generateID, failToast, successToast, fredokaLight, removeDuplicates } from '@/app/context';
 import UtilityButtons from './UtilityButtons';
 
 const fredokaSemibold = Fredoka({ weight: '600', subsets: ['latin'] });
@@ -412,22 +412,6 @@ const QuickleGame = () => {
 
         return null;
     }
-
-    /*
-        this is also a helper function, and it removes any duplicate games from a games (Game[])
-        array using the assigned ID's in the stopGame() function, returning the games array without
-        any duplicate games. 
-    */
-    const removeDuplicates = (games: Game[]): Game[] => {
-        const seenIds = new Map<string | undefined, Game>();
-
-        games.forEach((game) => {
-            if (game.id && !seenIds.has(game.id)) seenIds.set(game.id, game);
-            else if (!game.id) seenIds.set(undefined, game);
-        });
-
-        return Array.from(seenIds.values());
-    };
 
     // these types are declared inline because they have one sole purpose in the hardModeGuessValid() function
     type ColorResult = {
