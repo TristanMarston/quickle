@@ -1,8 +1,9 @@
 'use client';
 
+// importing packages & fonts & utility functions & functional components
 import { useEffect, useState, useCallback } from 'react';
 import { words } from '../../../public/pagedata';
-import { Fredoka, Nunito } from 'next/font/google';
+import { Fredoka } from 'next/font/google';
 import toast from 'react-hot-toast';
 import PausedModal from './Paused';
 import Keyboard from './Keyboard';
@@ -12,11 +13,14 @@ import UtilityButtons from './UtilityButtons';
 
 const fredokaSemibold = Fredoka({ weight: '600', subsets: ['latin'] });
 
+// this is the solution word, the word you're trying to guess, taken from an array found in /public/pagedata.tsx (only takes the most common 2500 words)
 let finalWord = words[Math.floor(Math.random() * 2500)].toUpperCase();
 
 const QuickleGame = () => {
+    // accessing gameContext to use global variables (state) and their setters
     const context = useGameContext();
-    if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
+    if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider'); // if an error has occurred, will throw an error (context can't be undefined, ever)
+    // taking only the state that I need, leaving out some stuff that's not necessary
     const {
         isRunning,
         setIsRunning,
@@ -29,8 +33,6 @@ const QuickleGame = () => {
         setGamesPlayed,
         setPrevGames,
         setModalOpened,
-        stopwatchVisible,
-        setStopwatchVisible,
         setSettingsModalOpened,
         hardMode,
         isOver,
@@ -41,11 +43,16 @@ const QuickleGame = () => {
         setGuess,
     } = context;
 
-    const [currentGame, setCurrentGame] = useState<Game>({ guess: guess, guesses: [''], finalWord: finalWord, stopwatch: stopwatchTime });
+    const [currentGame, setCurrentGame] = useState<Game>({ guess: guess, guesses: [''], finalWord: finalWord, stopwatch: stopwatchTime }); // this is a local variable, and stores all the current information about the game
 
+    /* 
+        this useEffect() runs whenever the state variable gamesPlayed is altered, which stores
+        all the previous games played and makes sure that the localStorage is up to date
+    */
     useEffect(() => {
         const gamesPlayedString = localStorage.getItem('gamesPlayed');
 
+        // since localStorage key value pairs can only technically be strings, we have to parse the string and set its type to Game[] if it's not null
         let gamesPlayedJSON: Game[] = gamesPlayedString === null ? [] : (JSON.parse(gamesPlayedString) as Game[]);
 
         if (gamesPlayed.length > 0) {
@@ -56,6 +63,11 @@ const QuickleGame = () => {
         }
     }, [gamesPlayed]);
 
+    /*
+        this useEffect() runs whenever the guess number is changed (once a guess has been made),
+        and saves it to the currentGame and localStorage so that if the user leaves the tab then
+        it will be saved
+    */
     useEffect(() => {
         if (guess > 1 && isRunning) {
             setCurrentGame((game) => {
@@ -73,6 +85,11 @@ const QuickleGame = () => {
         }
     }, [guess]);
 
+    /*
+        this useEffect() runs when the program is launched, and checks if there's a currentGame
+        in local storage. If there is, then it will set all of the game data from localStorage
+        to the global variables, like keyboard, inputs, stopwatchTime, etc.
+    */
     useEffect(() => {
         const gameString: string | null = localStorage.getItem('currentGame');
 
@@ -119,6 +136,12 @@ const QuickleGame = () => {
         }
     }, []);
 
+    /*
+        this useEffect() runs whenever the global variable isRunning is changed, and if the game
+        has been won or lost, then it will set the currentGame to blank, and the currentGame in
+        localStorage to null, because the game is over. It also checks if the game is running, then
+        the game needs to be paused otherwise the timer will continue to run
+    */
     useEffect(() => {
         if (!isRunning && isOver) {
             setCurrentGame(() => {
@@ -130,33 +153,46 @@ const QuickleGame = () => {
         if (isRunning) setGamePaused(false);
     }, [isRunning]);
 
+    /*
+        this function runs whenever a key is pressed, or whenever one of the key elements in
+        Keyboard.tsx is pressed. It will then determine if the key is a letter (add it to guess),
+        'enter' (submit guess or restart game), or 'backspace' (delete letter from guess). Only one
+        of these things can happen, since the key can't be changed
+    */
     const handleKeyPress = useCallback(
         (e: KeyboardEvent | string) => {
+            let key: string = typeof e === 'object' ? e.key.toLowerCase() : typeof e === 'string' ? e.toLowerCase() : e; // turns the key into a string (could be a key event or a string, depending on the input)
             let index = 0;
-            let key: string = typeof e === 'object' ? e.key.toLowerCase() : typeof e === 'string' ? e.toLowerCase() : e;
-            while (index < inputs.length && inputs[index].text !== '') index++;
+            while (index < inputs.length && inputs[index].text !== '') index++; // finds the smallest index with an empty .text property (next index to add letter)
 
             if (key.toLowerCase() === 'enter') {
+                // had an issue where the modals would close when 'enter' was pressed, so this fixed the issue (setting state to itself before its able to change)
                 setModalOpened((prev) => prev);
                 setSettingsModalOpened((prev) => prev);
+                // if the game is running, then it will submit the current guess to handleReturn
+
                 if (isRunning && !gamePaused) {
                     const newInputs: InputBox[] = handleReturn(inputs, index - 1, guess);
                     setInputs(newInputs);
                     return;
+                    // if the game has been won or lost, then pressing enter will reset the game
                 } else if (isOver) restartGame();
             }
-
+            
+            // will check if the key is a letter, check that the key's length is one (letter), checks that the index is valid, checks that the index isn't locked, and checks that the game isn't paused
             if (key.match(/[a-zA-Z]/) && key.length === 1 && index < 5 * guess && index < inputs.length && !inputs[index].locked && !gamePaused) {
                 setInputs((prev) => {
                     let tempInputs: InputBox[] = [...prev];
-                    tempInputs[index].text = key.toUpperCase();
-                    tempInputs[index].color = 'selected';
-                    setIsRunning(true);
+                    tempInputs[index].text = key.toUpperCase(); // adds letter to boxes
+                    tempInputs[index].color = 'selected'; // changes the color and animates the selected box
+                    setIsRunning(true); // makes sure that the game is running
                     return tempInputs;
                 });
+            // checks if the key is 'backspace', then checks that the index is valid and the game isn't paused 
             } else if (key.toLowerCase() === 'backspace' && !inputs[index > 0 ? index - 1 : 0].locked && !gamePaused) {
                 setInputs((prev) => {
                     let tempInputs: InputBox[] = [...prev];
+                    // use of ternaries to check the index is valid, and delete whatever letter was there
                     tempInputs[index > 0 ? index - 1 : 0].text = '';
                     tempInputs[index > 0 ? index - 1 : 0].color = 'none';
                     return tempInputs;
@@ -166,32 +202,44 @@ const QuickleGame = () => {
         [inputs, guess, isRunning]
     );
 
+
+    /* 
+        this function will run only when it's called in the handleKeyPress function, when the 'enter'
+        key has been pressed. this function will take in the current input boxes, the current index,
+        and the current guess number, then return the updated input boxes which is set in the handleKeyPress
+        function.
+    */
     const handleReturn = useCallback(
         (boxes: InputBox[], index: number, guess: number): InputBox[] => {
+            // sends a fail toast if the guess isn't 5 letters
             if ((index + 1) % 5 !== 0 && isRunning) {
                 failToast('Needs to be 5 letters.');
                 return boxes;
             } else if (guess > 6) return boxes;
 
             let word = '';
-            for (let i = guess * 5 - 5; i < guess * 5; i++) word += boxes[i].text.toUpperCase();
+            for (let i = guess * 5 - 5; i < guess * 5; i++) word += boxes[i].text.toUpperCase(); // appends all guess letters to a string
 
             if (word.length < 5) return boxes;
 
+            // if the word isn't found in the array of potential words, sends a fail toast
             if (words.indexOf(word.toLowerCase()) == -1) {
                 failToast('Unknown word.');
                 return boxes;
             }
 
+            // checks if it's hard mode, and if it's not valid for hard mode, then it will stop the function and send a failtoast; otherwise, will continue and grade the guess
             if (hardMode && !hardModeGuessValid(boxes, word, guess)) return boxes;
 
+            // uses the gradeGuess helper function to return an array of strings, either 'green', 'yellow', or 'gray' depending on its score in relation to the final word.
             const result: string[] = gradeGuess(finalWord, word, boxes);
 
+            // changes the color of the keys in the keyboard
             setKeyboard((prev: Key[][]) => {
                 let tempKeyboard: Key[][] = [...prev];
                 for (let i = 0; i < result.length; i++) {
                     let color: string = result[i];
-                    const indices: [number, number] | null = findKeyIndices(tempKeyboard, word[i]);
+                    const indices: [number, number] | null = findKeyIndices(tempKeyboard, word[i]); // uses helper function to find indices of 2d keyboard array
                     let currentColor: string = indices ? tempKeyboard[indices[0]][indices[1]].color.toLowerCase() : 'gray';
 
                     if (indices && color.toLowerCase() == 'green') tempKeyboard[indices[0]][indices[1]].color = color;
@@ -203,6 +251,7 @@ const QuickleGame = () => {
                 return tempKeyboard;
             });
 
+            // iterates through the result array again, checking how many green guesses there are and locking the guess so you can't write on it again
             let greenCount = 0;
             for (let i = 0; i < result.length; i++) {
                 if (result[i].toLowerCase() == 'green') greenCount++;
@@ -211,19 +260,24 @@ const QuickleGame = () => {
                 boxes[guess * 5 - 5 + i].locked = true;
             }
 
-            if (greenCount == 5) stopGame(true);
-            else if (guess == 6) stopGame(false);
+            if (greenCount == 5) stopGame(true); // if all 5 letters are green, triggers stopGame() with true as a parameter (signifying game won)
+            else if (guess == 6) stopGame(false); // if the last guess has been made, triggers stopGame() with false as a parameter (signifying game lost)
 
-            setGuess((prev) => prev + 1);
+            setGuess((prev) => prev + 1); // increases guess by 1
 
             return boxes;
         },
         [guess, hardMode]
     );
 
+    /*
+        this function will grade a guess based on the finalWord (solution) and word (guess)
+        parameters, making two passes over the guess word to first see if the guess is in the
+        right place, then checking a second time with just the letters that aren't green, returns
+        an array of 5 strings either with 'gray, 'yellow', or 'green'
+    */
     const gradeGuess = (finalWord: string, word: string, boxes: InputBox[]): string[] => {
         const result: string[] = Array(5).fill('gray');
-
         const matched: boolean[] = Array(5).fill(false);
 
         for (let i = 0; i < 5; i++) {
@@ -248,6 +302,10 @@ const QuickleGame = () => {
         return result;
     };
 
+    /*
+        this function will stop the game after it's been won or lost (or quit), adding the most recent
+        game to local storage, stopping the timer, and locking all input boxes
+    */
     const stopGame = useCallback(
         (won: boolean) => {
             const generatedID: string = generateID(Math.floor(Math.random() * 15) + 8);

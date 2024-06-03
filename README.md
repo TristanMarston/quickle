@@ -64,7 +64,9 @@ Here are some clarifications on what I implemented in my project to fulfill the 
 
 **My Control Structures** 
 
-Beginning in the root file, `src/app/page.tsx`
+In my project, I have over a hundred if statements, for loops, array.map()'s, ternaries, and other control structures embedded in my project. In `src/_components/_game/Game.tsx` alone, I have 25+ for loops, forEach() loops, and while loops. The most efficient control structure that I use throughout my project is the array.map(), which lets me create an HTML element for each item in an array, so I can map, say, an array of objects with different properties to create new elements for different pieces of data.
+
+One example of this can be found in `src/_components/_game/Keyboard.tsx`, where I have a nested array.map(), which displays all of the keys in the keyboard without me having to write code for every single key. Instead, I use a functional component called `keyboardElement`, which takes in a string and returns a `<div>` which has all of the necessary classes, onClicks, etc.
 
 ### Classes and Objects
 **Description** - I can write classes and instantiate objects for reusability and scalability of code for large programs, and to encapsulate information for collaborative development.
@@ -90,18 +92,30 @@ Here, I am using the exported function `useGameContext()` to access all the glob
 
 Another instance of my inheritance in this project is in `src/_components/_game/Game.tsx`, which is a massive file boasting 500+ lines of code. To condense this, I created 3 branching files of the `Game.tsx` file, namely `Keyboard.tsx`, `UtilityButtons.tsx`, and `Paused.tsx`, which lighten the burden on the one `Game.tsx` file by breaking up each part into different files.
 
-Further, I have a couple helper functions in context.tsx, like `generateID`, `failToast`, `successToast`, `findKeyIndices`, etc. All of these functions are exported from context.tsx, and all the children of the `GameContext` provider can import these functions and use them.
+Further, I have a couple helper functions in context.tsx, like `generateID`, `failToast`, `successToast`, `parseTime`, `formatTime`. All of these functions are exported from context.tsx, and all the children of the `GameContext` provider can import these functions and use them without having to rewrite code.
 
 ### Documentation with Comments
 **Description** - I can document changes to program structure and list descriptors for other developers to analyze and adjust my written code.
 
 **My Documentation**
 
-A lot of my documentation is in this README.md file, which explains how the project works. To see the documentation for my actual code, follow this branch of files for easiest grading.
+A lot of my documentation is in this README.md file, which explains how the project works. To see the documentation for my actual code, follow this branch of files for easiest grading:
+
+1. `src/app/context.tsx`
+2. `src/app/page.tsx`
+3. `src/_components/Game.tsx`
+4. `src/_components/Navbar.tsx`
+
 
 ### User Interactability
 **Description** - I can create programs that are designed with the user in mind. My programs add to the human experience by providing entertainment or education, account for human error, and perform tasks on behalf of humans.
 
 **My User Interactability**
+
+My program has been designed and programmed with a simple aesthetic with not too many colors, mostly just black and white to suit the "blank canvas" feel, where users can choose to play this game in their own way. I've used a rounded font, which is more modern and has been proved to be much more inviting and easy-to-read than many other serif fonts. There are many different ways to play this game, and each of the ways are very accessible. For example, if you're a person that wants to get the quickest times, then you can put the game on easy mode and have the timer visible. But, if you're someone that likes to take their time and get the least number of guesses, you can switch the game to hard mode to ensure you get it in the least number of guesses, and you can also toggle the timer if it stresses you out. 
+
+Further, Quickle calculates your average times, win percentage, streak, etc., so the user doesn't have to do it themselves.
+
+Even if the user accidentally closes the tab during a game, the current progress on that game is saved, which accounts for some human error. 
 
 

@@ -1,13 +1,16 @@
 'use client';
 
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { keyboardData } from '../../public/pagedata';
-import toast from 'react-hot-toast';
-import { Fredoka } from 'next/font/google';
+// importing all packages/data
+import { createContext, useState, useContext, useEffect } from 'react';
+import { keyboardData } from '../../public/pagedata'; // has all information about keys
+import toast from 'react-hot-toast'; // for little information displayed at top of screen, like "you win!" or "you lose!"
+import { Fredoka } from 'next/font/google'; // primary font I use for this project
 
+// defining my fonts and the font weights
 export const fredokaLight = Fredoka({ weight: '400', subsets: ['latin'] });
 export const fredokaBold = Fredoka({ weight: '700', subsets: ['latin'] });
 
+// types (classes-ish)
 export type InputBox = {
     id: number;
     text: string;
@@ -32,6 +35,7 @@ export type Game = {
     sessionID?: string | null | undefined;
 };
 
+// all of the state (global variables) that I'm exporting out of this file to use anywhere
 type Context = {
     isRunning: boolean;
     setIsRunning: React.Dispatch<React.SetStateAction<boolean>>;
@@ -65,7 +69,7 @@ type Context = {
     setGuess: React.Dispatch<React.SetStateAction<number>>;
 };
 
-// helper functions
+// helper functions, exported to use anywhere in project
 export const generateID = (length: number) => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -121,8 +125,10 @@ export const useGameContext = () => useContext(GameContext);
 
 // Create the provider component
 export const GameProvider = ({ children }: any) => {
-    const [isRunning, setIsRunning] = useState(false);
-    const [gamePaused, setGamePaused] = useState(false);
+    // the following three variables are very similar, but have different functionalities
+    const [isRunning, setIsRunning] = useState(false);  // this state says whether or not a game is CURRENTLY running (timer going)
+    const [gamePaused, setGamePaused] = useState(false); // this state says whether or not a game is paused
+    const [isOver, setIsOver] = useState(false); // this state says whether a game has either been won or lost, resets if the board is reset
     const [inputs, setInputs] = useState<InputBox[]>(() => {
         const newInputs: InputBox[] = [];
         for (let i = 0; i < 30; i++) newInputs[i] = { id: i, text: '', locked: false, color: 'none' };
@@ -136,12 +142,16 @@ export const GameProvider = ({ children }: any) => {
     const [settingsModalOpened, setSettingsModalOpened] = useState(false);
     const [hardMode, setHardMode] = useState(false);
     const [shownStats, setShownStats] = useState('total');
-    const [isOver, setIsOver] = useState(false);
     const [stopwatchTime, setStopwatchTime] = useState<string>('00:00:00.000');
     const [guess, setGuess] = useState(1);
 
     const [darkMode, setDarkMode] = useState(false);
 
+    /* 
+        this useEffect() runs right after launch, depicted by the empty dependency array ([]),
+        and accesses local storage to set the local variables of darkMode and hardMode, in addition
+        to setting the sessionStorage to have an ID which refreshes every time the browser is reloaded
+    */
     useEffect(() => {
         const theme = localStorage.getItem('theme');
         if (theme === 'dark') setDarkMode(true);
@@ -153,6 +163,10 @@ export const GameProvider = ({ children }: any) => {
         sessionStorage.setItem('sessionID', sessionID);
     }, []);
 
+    /*
+        this useEffect() runs whenever the darkMode state is changed, and it sets the localStorage
+        value of 'darkMode' so that it saves even if the browser is closed
+    */
     useEffect(() => {
         if (darkMode) {
             document.documentElement.classList.add('dark');
@@ -163,6 +177,10 @@ export const GameProvider = ({ children }: any) => {
         }
     }, [darkMode]);
 
+    /*
+        same thing with the previous useEffect(), this runs whenever the hardMode state is changed,
+        and it sets the localStorage value of 'hardMode' so that it saves.
+    */
     useEffect(() => {
         if (hardMode) localStorage.setItem('hardMode', 'true');
         else localStorage.setItem('hardMode', 'false');
@@ -203,7 +221,7 @@ export const GameProvider = ({ children }: any) => {
                 setGuess
             }}
         >
-            {children}
+            {children} {/* refers to all the children of the provider, found in page.tsx */}
         </GameContext.Provider>
     );
 };

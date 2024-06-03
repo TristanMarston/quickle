@@ -1,14 +1,15 @@
-import { Dialog, DialogContent, DialogOverlay, DialogTrigger } from '@/components/ui/dialog';
-import { BarChart2 } from 'lucide-react';
-import { SlidersHorizontal } from 'lucide-react';
+// importing all components & icons
+import { Dialog, DialogContent, DialogOverlay, DialogTrigger } from '@/components/ui/dialog'; // premade component
+import { BarChart2, SlidersHorizontal } from 'lucide-react';
 import { Fredoka } from 'next/font/google';
-import Statistics from './_statistics/Statistics';
-import { useGameContext } from '@/app/context';
-import Settings from './_settings/Settings';
+import Statistics from './_statistics/Statistics'; // functional component
+import { useGameContext } from '@/app/context'; // allows us to access global variables (state)
+import Settings from './_settings/Settings'; // functional component
 
 const fredoka = Fredoka({ weight: '600', subsets: ['latin'] });
 
 const Navbar = () => {
+    // accessing global variables and their setters
     const context = useGameContext();
     if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
 
@@ -18,6 +19,7 @@ const Navbar = () => {
         <div className='w-full flex justify-center'>
             <div className='flex flex-col items-center justify-center w-96 max-mablet:w-[22rem]'>
                 <div className='flex items-center justify-between py-1 w-full'>
+                    {/* statistics icon and modal (pop-up) trigger */}
                     <Dialog open={modalOpened}>
                         <DialogTrigger className='outline-none'>
                             <BarChart2 className='hover:cursor-pointer w-12 h-12 max-mablet:w-10 max-mablet:h-10 max-mobile:w-9 max-mobile:h-9' onClick={() => setModalOpened(true)} />
@@ -28,11 +30,13 @@ const Navbar = () => {
                                 onClick={(e) => e.stopPropagation()}
                                 id='hidex'
                             >
-                                <Statistics />
+                                <Statistics /> {/* functional component found at Statistics.tsx */}
                             </DialogContent>
                         </DialogOverlay>
                     </Dialog>
+                    {/* title */}
                     <h1 className={`${fredoka.className} text-[3rem] max-mablet:text-[2.75rem] max-mobile:text-[2.3rem]`}>quickle</h1>
+                    {/* settings icon and modal (pop-up) */}
                     <Dialog open={settingsModalOpened}>
                         <DialogTrigger className='outline-none'>
                             <SlidersHorizontal
@@ -46,7 +50,7 @@ const Navbar = () => {
                                 onClick={(e) => e.stopPropagation()}
                                 id='hidex'
                             >
-                                <Settings />
+                                <Settings /> {/* functional component found at Settings.tsx */}
                             </DialogContent>
                         </DialogOverlay>
                     </Dialog>
