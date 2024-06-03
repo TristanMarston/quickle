@@ -99,12 +99,19 @@ Further, I have a couple helper functions in context.tsx, like `generateID`, `fa
 
 **My Documentation**
 
-A lot of my documentation is in this README.md file, which explains how the project works. To see the documentation for my actual code, follow this branch of files for easiest grading:
+A lot of my documentation is in this README.md file, which explains how the project works. To see the documentation for my actual code, follow this order of files for easiest grading (from parent to children):
 
 1. `src/app/context.tsx`
 2. `src/app/page.tsx`
-3. `src/_components/Game.tsx`
-4. `src/_components/Navbar.tsx`
+3. `src/_components/_game/Game.tsx`
+4. `src/_components/_game/UtilityButtons.tsx`
+5. `src/_components/_game/Keyboard.tsx`
+6. `src/_components/_game/Paused.tsx`
+7. `src/_components/Navbar.tsx`
+8. `src/_components/_settings/Settings.tsx`
+9. `src/_components/_statistics/Statistics.tsx`
+10. `src/_components/_statistics/ShownSliders.tsx`
+
 
 
 ### User Interactability

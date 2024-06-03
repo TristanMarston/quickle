@@ -1,14 +1,15 @@
 'use client';
 
 import { useGameContext } from '@/app/context';
-import { X } from 'lucide-react';
-import { Fredoka } from 'next/font/google';
+import { X } from 'lucide-react'; // X icon for modal
+import { Fredoka } from 'next/font/google'; // specific font weight local to this file
 import { useEffect, useState } from 'react';
-import ShownSliders from './ShownSliders';
-import { Game, formatTime, parseTime, fredokaBold, fredokaLight } from '@/app/context';
+import ShownSliders from './ShownSliders'; // functional component for sliders at the bottom of modal
+import { Game, formatTime, parseTime, fredokaBold, fredokaLight, generateID, removeDuplicates } from '@/app/context'; // helper functions, types, fonts
 
 const fredokaSemiBold = Fredoka({ weight: '500', subsets: ['latin'] });
 
+// local type which has all of the formatted statistics
 type Stats = {
     guessNumbers: [number, number, number, number, number, number];
     currentStreak: number;
@@ -27,6 +28,7 @@ const Statistics = () => {
     if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
 
     const { prevGames, setPrevGames, setModalOpened, shownStats } = context;
+    // base statistics, when no games have been played yet
     const [formattedStats, setFormattedStats] = useState<Stats>({
         guessNumbers: [0, 0, 0, 0, 0, 0],
         currentStreak: 0,
@@ -40,6 +42,7 @@ const Statistics = () => {
         statType: 'normal',
     });
 
+    // this useEffect() runs when the browser is launched, grabbing the current games played from local storage and removing any duplicates using the utility function in 
     useEffect(() => {
         const gamesPlayedString = localStorage.getItem('gamesPlayed');
 
@@ -94,26 +97,6 @@ const Statistics = () => {
 
         setFormattedStats(stats);
     }, [prevGames, shownStats]);
-
-    useEffect(() => console.log(formattedStats.guessNumbers.length), [formattedStats]);
-
-    const removeDuplicates = (games: Game[]): Game[] => {
-        const seenIds = new Map<string | undefined, Game>();
-
-        games.forEach((game) => {
-            if (game.id && !seenIds.has(game.id)) seenIds.set(game.id, game);
-            else if (!game.id) seenIds.set(undefined, game);
-        });
-
-        return Array.from(seenIds.values());
-    };
-
-    const generateID = (length: number) => {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) result += characters.charAt(Math.floor(Math.random() * characters.length));
-        return result;
-    };
 
     return (
         <div className='w-full px-6 py-4'>

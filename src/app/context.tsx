@@ -77,6 +77,17 @@ export const generateID = (length: number) => {
     return result;
 };
 
+export const removeDuplicates = (games: Game[]): Game[] => {
+    const seenIds = new Map<string | undefined, Game>();
+
+    games.forEach((game) => {
+        if (game.id && !seenIds.has(game.id)) seenIds.set(game.id, game);
+        else if (!game.id) seenIds.set(undefined, game);
+    });
+
+    return Array.from(seenIds.values());
+};
+
 export const formatTime = (elapsedTime: number) => {
     let milliseconds = Math.floor((elapsedTime % 1000) / 10);
     let seconds = Math.floor((elapsedTime % 60000) / 1000);

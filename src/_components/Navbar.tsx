@@ -15,6 +15,11 @@ const Navbar = () => {
 
     const { modalOpened, setModalOpened, settingsModalOpened, setSettingsModalOpened } = context;
 
+    /* 
+        this functional component will return the navbar at the top of the screen, with a Statistics icon,
+        title, and Settings icon. when the statistics icon is pressed, the Statistics.tsx functional component
+        is called, and when the settings button is pressed, the Settings.tsx functional component is called
+    */
     return (
         <div className='w-full flex justify-center'>
             <div className='flex flex-col items-center justify-center w-96 max-mablet:w-[22rem]'>
