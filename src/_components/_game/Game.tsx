@@ -113,7 +113,7 @@ const QuickleGame = () => {
                                 let color: string = result[j];
                                 tempInputs[(i + 1) * 5 - 5 + j].color = color;
                                 tempInputs[(i + 1) * 5 - 5 + j].locked = true;
-                                setKeyboard((prevKeyboard) => {
+                                setKeyboard((prevKeyboard: Key[][]) => {
                                     let tempKeyboard: Key[][] = prevKeyboard;
                                     const indices: [number, number] | null = findKeyIndices(tempKeyboard, game.guesses[i][j]);
                                     let currentColor: string = indices ? tempKeyboard[indices[0]][indices[1]].color.toLowerCase() : 'gray';

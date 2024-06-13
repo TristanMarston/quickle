@@ -1,7 +1,7 @@
 'use client';
 
 // importing all packages/data
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { keyboardData } from '../../public/pagedata'; // has all information about keys
 import toast from 'react-hot-toast'; // for little information displayed at top of screen, like "you win!" or "you lose!"
 import { Fredoka } from 'next/font/google'; // primary font I use for this project
@@ -33,6 +33,19 @@ export type Game = {
     id?: string;
     hardMode?: boolean;
     sessionID?: string | null | undefined;
+};
+
+export type Stats = {
+    guessNumbers: [number, number, number, number, number, number];
+    currentStreak: number;
+    bestStreak: number;
+    timesPlayed: number;
+    timesWon: number;
+    timesLost: number;
+    averageTime: string;
+    fastestTime: string;
+    winPercentage: number;
+    statType: string;
 };
 
 // all of the state (global variables) that I'm exporting out of this file to use anywhere
@@ -67,6 +80,11 @@ type Context = {
     setStopwatchTime: React.Dispatch<React.SetStateAction<string>>;
     guess: number;
     setGuess: React.Dispatch<React.SetStateAction<number>>;
+    alertDialogOpened: boolean;
+    setAlertDialogOpened: React.Dispatch<React.SetStateAction<boolean>>;
+    alertDialog: React.MutableRefObject<boolean>;
+    formattedStats: Stats;
+    setFormattedStats: React.Dispatch<React.SetStateAction<Stats>>;
 };
 
 // helper functions, exported to use anywhere in project
@@ -89,6 +107,7 @@ export const generateID = (length: number) => {
     any duplicate games. 
 */
 export const removeDuplicates = (games: Game[]): Game[] => {
+    if (games === undefined || games === null || games.length < 1) return [];
     const seenIds = new Map<string | undefined, Game>();
 
     games.forEach((game) => {
@@ -98,7 +117,6 @@ export const removeDuplicates = (games: Game[]): Game[] => {
 
     return Array.from(seenIds.values());
 };
-
 
 /* 
     this helper function takes in a number of milliseconds, and formats it like 
@@ -161,7 +179,7 @@ export const useGameContext = () => useContext(GameContext);
 // Create the provider component
 export const GameProvider = ({ children }: any) => {
     // the following three variables are very similar, but have different functionalities
-    const [isRunning, setIsRunning] = useState(false);  // this state says whether or not a game is CURRENTLY running (timer going)
+    const [isRunning, setIsRunning] = useState(false); // this state says whether or not a game is CURRENTLY running (timer going)
     const [gamePaused, setGamePaused] = useState(false); // this state says whether or not a game is paused
     const [isOver, setIsOver] = useState(false); // this state says whether a game has either been won or lost, resets if the board is reset
     const [inputs, setInputs] = useState<InputBox[]>(() => {
@@ -179,6 +197,20 @@ export const GameProvider = ({ children }: any) => {
     const [shownStats, setShownStats] = useState('total');
     const [stopwatchTime, setStopwatchTime] = useState<string>('00:00:00.000');
     const [guess, setGuess] = useState(1);
+    const [alertDialogOpened, setAlertDialogOpened] = useState(false);
+    const alertDialog = useRef(false);
+    const [formattedStats, setFormattedStats] = useState<Stats>({
+        guessNumbers: [0, 0, 0, 0, 0, 0],
+        currentStreak: 0,
+        bestStreak: 0,
+        timesPlayed: 0,
+        timesWon: 0,
+        timesLost: 0,
+        averageTime: '00:00:00.000',
+        fastestTime: '00:00:00.000',
+        winPercentage: 0,
+        statType: 'normal',
+    });
 
     const [darkMode, setDarkMode] = useState(false);
 
@@ -221,6 +253,15 @@ export const GameProvider = ({ children }: any) => {
         else localStorage.setItem('hardMode', 'false');
     }, [hardMode]);
 
+    useEffect(() => {
+        if (!settingsModalOpened && alertDialog.current) setAlertDialogOpened(true);
+        else if (settingsModalOpened && !alertDialog.current) setAlertDialogOpened(false);
+    }, [settingsModalOpened]);
+
+    useEffect(() => {
+        alertDialog.current = alertDialogOpened;
+    }, [alertDialogOpened]);
+
     return (
         <GameContext.Provider
             value={{
@@ -253,7 +294,12 @@ export const GameProvider = ({ children }: any) => {
                 stopwatchTime,
                 setStopwatchTime,
                 guess,
-                setGuess
+                setGuess,
+                alertDialogOpened,
+                setAlertDialogOpened,
+                alertDialog,
+                formattedStats,
+                setFormattedStats,
             }}
         >
             {children} {/* refers to all the children of the provider, found in page.tsx */}

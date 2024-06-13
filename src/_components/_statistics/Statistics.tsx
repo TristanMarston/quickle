@@ -1,6 +1,6 @@
 'use client';
 
-import { useGameContext } from '@/app/context';
+import { useGameContext, Stats } from '@/app/context';
 import { X } from 'lucide-react'; // X icon for modal
 import { Fredoka } from 'next/font/google'; // specific font weight local to this file
 import { useEffect, useState } from 'react';
@@ -9,38 +9,12 @@ import { Game, formatTime, parseTime, fredokaBold, fredokaLight, generateID, rem
 
 const fredokaSemiBold = Fredoka({ weight: '500', subsets: ['latin'] });
 
-// local type which has all of the formatted statistics
-type Stats = {
-    guessNumbers: [number, number, number, number, number, number];
-    currentStreak: number;
-    bestStreak: number;
-    timesPlayed: number;
-    timesWon: number;
-    timesLost: number;
-    averageTime: string;
-    fastestTime: string;
-    winPercentage: number;
-    statType: string;
-};
-
 const Statistics = () => {
     const context = useGameContext();
     if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
 
-    const { prevGames, setPrevGames, setModalOpened, shownStats } = context;
+    const { prevGames, setPrevGames, setModalOpened, shownStats, formattedStats, setFormattedStats } = context;
     // base statistics, when no games have been played yet
-    const [formattedStats, setFormattedStats] = useState<Stats>({
-        guessNumbers: [0, 0, 0, 0, 0, 0],
-        currentStreak: 0,
-        bestStreak: 0,
-        timesPlayed: 0,
-        timesWon: 0,
-        timesLost: 0,
-        averageTime: '00:00:00.000',
-        fastestTime: '00:00:00.000',
-        winPercentage: 0,
-        statType: 'normal',
-    });
 
     // this useEffect() runs when the browser is launched, grabbing the current games played from local storage and removing any duplicates using the utility function in context.tsx
     useEffect(() => {
