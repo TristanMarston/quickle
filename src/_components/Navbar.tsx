@@ -84,7 +84,7 @@ const Navbar = () => {
                     <div className='w-full flex flex-col gap-1'>
                         <h2 className={`${fredokaBold.className} text-3xl`}>Are you absolutely sure?</h2>
                         <p className={`${fredokaLight.className}`}>
-                            This will <span className={fredoka.className}>permanently</span> remove your statistics from this browser's data. This action can not be undone.
+                            This will <span className={fredoka.className}>permanently</span> remove your statistics from this browser&#39;s data. This action can not be undone.
                         </p>
                     </div>
                     <AlertDialogFooter>
