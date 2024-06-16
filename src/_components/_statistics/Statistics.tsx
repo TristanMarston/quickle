@@ -52,6 +52,7 @@ const Statistics = () => {
         prevGames.forEach((game: Game) => {
             // iterates through all the games ever played
             // this if statement filters which stats you're currently looking at, whether it's the total, normal, hard, or session
+            if (game.guessLength === null || game.guessLength === undefined) game.guessLength = 5;
             let correctLength = selectedLength !== -1 ? selectedLength === game.guessLength : true;
             if (
                 correctLength &&
