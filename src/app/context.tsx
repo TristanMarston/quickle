@@ -231,11 +231,7 @@ export const GameProvider = ({ children }: any) => {
     // the following three variables are very similar, but have different functionalities
     const [isRunning, setIsRunning] = useState(false); // this state says whether or not a game is CURRENTLY running (timer going)
     const [gamePaused, setGamePaused] = useState(false); // this state says whether or not a game is paused
-    const [guessLength, setGuessLength] = useState<number>(() => {
-        let length = localStorage.getItem('guessLength');
-        if (length !== null && !isNaN(parseInt(length))) return parseInt(length);
-        return 5;
-    });
+    const [guessLength, setGuessLength] = useState<number>(5);
     const [isOver, setIsOver] = useState(false); // this state says whether a game has either been won or lost, resets if the board is reset
     const [inputs, setInputs] = useState<InputBox[]>(() => {
         const newInputs: InputBox[] = [];
