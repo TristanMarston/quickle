@@ -54,7 +54,6 @@ const Settings = () => {
                         <p className={`${fredokaLight.className} text-xl min-w-[130px]`}>Guess Length:</p>
                         <Slider
                             defaultValue={[guessLength]}
-                            state={guessLength}
                             min={3}
                             max={7}
                             step={1}
