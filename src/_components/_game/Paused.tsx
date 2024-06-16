@@ -5,10 +5,10 @@ import { Pause, X } from 'lucide-react'; // icons
 
 const PausedModal = ({ stopGame }: { stopGame: (won: boolean) => void }) => {
     const context = useGameContext();
-    if (context === undefined) {
-        throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
-    }
-    const { isRunning, setIsRunning, gamePaused, setGamePaused, inputs } = context;
+    if (context === undefined) throw new Error('useContext(GameContext) must be used within a GameContext.Provider');
+
+    const { isRunning, setIsRunning, gamePaused, setGamePaused, inputs, guessLength } = context;
+    const colClasses = ['grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6', 'grid-cols-7'];
 
     /* 
         this functional component will return an absolutely positioned pop-up, which displays
@@ -17,9 +17,11 @@ const PausedModal = ({ stopGame }: { stopGame: (won: boolean) => void }) => {
         the current game and one to continue the current game
     */
     return !isRunning && gamePaused ? (
-        <div className='absolute flex flex-col items-center max-mobile:w-[304px] w-[344px] z-50'>
+        <div className='absolute flex flex-col items-center left-1/2 -translate-x-1/2 max-mobile:w-[304px] w-[344px] z-50'>
             <h1 className={`${fredokaBold.className} text-3xl`}>Game Paused</h1>
-            <div className='grid grid-rows-6 grid-cols-5 gap-2 mt-2 mb-4'> {/* mini version of input boxes, without any letters */}
+            <div className={`grid grid-rows-6 ${colClasses[guessLength - 3]} gap-2 mt-2 mb-4`}>
+                {' '}
+                {/* mini version of input boxes, without any letters */}
                 {inputs.map((box: InputBox) => {
                     let color =
                         box.color.toLowerCase() == 'green'

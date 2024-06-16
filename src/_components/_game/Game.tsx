@@ -2,19 +2,15 @@
 
 // importing packages & fonts & utility functions & functional components
 import { useEffect, useState, useCallback } from 'react';
-import { words } from '../../../public/pagedata';
 import { Fredoka } from 'next/font/google';
 import toast from 'react-hot-toast';
 import PausedModal from './Paused';
 import Keyboard from './Keyboard';
-import { useGameContext } from '@/app/context';
+import { getGuessWords, getWords, useGameContext } from '@/app/context';
 import { InputBox, Key, Game, generateID, failToast, successToast, fredokaLight, removeDuplicates } from '@/app/context';
 import UtilityButtons from './UtilityButtons';
 
 const fredokaSemibold = Fredoka({ weight: '600', subsets: ['latin'] });
-
-// this is the solution word, the word you're trying to guess, taken from an array found in /public/pagedata.tsx (only takes the most common 2500 words)
-let finalWord = words[Math.floor(Math.random() * 2500)].toUpperCase();
 
 const QuickleGame = () => {
     // accessing gameContext to use global variables (state) and their setters
@@ -41,9 +37,18 @@ const QuickleGame = () => {
         setStopwatchTime,
         guess,
         setGuess,
+        guessLength,
+        setGuessLength,
+        words,
+        setWords,
+        guessWords,
+        setGuessWords,
+        finalWord,
+        setFinalWord,
+        gameRunning,
     } = context;
 
-    const [currentGame, setCurrentGame] = useState<Game>({ guess: guess, guesses: [''], finalWord: finalWord, stopwatch: stopwatchTime }); // this is a local variable, and stores all the current information about the game
+    const [currentGame, setCurrentGame] = useState<Game>({ guess: guess, guesses: [''], finalWord: finalWord, stopwatch: stopwatchTime, guessLength: guessLength }); // this is a local variable, and stores all the current information about the game
 
     /* 
         this useEffect() runs whenever the state variable gamesPlayed is altered, which stores
@@ -76,7 +81,7 @@ const QuickleGame = () => {
                 game.guess = guess;
 
                 const guesses: string[] = Array(guess - 1).fill('');
-                for (let i = 0; i < guess - 1; i++) for (let j = (i + 1) * 5 - 5; j < (i + 1) * 5; j++) guesses[i] += inputs[j].text.toUpperCase();
+                for (let i = 0; i < guess - 1; i++) for (let j = (i + 1) * guessLength - guessLength; j < (i + 1) * guessLength; j++) guesses[i] += inputs[j].text.toUpperCase();
                 game.guesses = guesses;
 
                 localStorage.setItem('currentGame', JSON.stringify(game));
@@ -92,27 +97,44 @@ const QuickleGame = () => {
     */
     useEffect(() => {
         const gameString: string | null = localStorage.getItem('currentGame');
+        const gamePlaying = gameString !== null && gameString !== 'null' && gameString !== undefined && gameString.length > 0;
 
-        if (gameString != null) {
+        getWords(guessLength).then((res: string[]) => {
+            setWords(res);
+            getGuessWords(guessLength).then((response: string[]) => {
+                setGuessWords(response);
+                if (!gamePlaying) newWord(res, response);
+            });
+        });
+
+        if (gamePlaying) {
             try {
                 const game: Game = JSON.parse(gameString) as Game;
 
                 if (game !== null) {
+                    gameRunning.current = true;
+                    let length = guessLength;
+                    if (game.guessLength) {
+                        length = game.guessLength;
+                        setGuessLength(length);
+                    }
                     setGamePaused(true);
+                    setIsOver(false);
+                    setIsRunning(false);
                     setStopwatchTime(game.stopwatch);
-                    finalWord = game.finalWord;
+                    setFinalWord(game.finalWord);
 
                     setInputs((prev: InputBox[]) => {
                         let tempInputs: InputBox[] = prev;
 
                         for (let i = 0; i < game.guesses.length; i++) {
-                            for (let j = 0; j < game.guesses[i].length; j++) tempInputs[(i + 1) * 5 - 5 + j].text = game.guesses[i][j];
+                            for (let j = 0; j < game.guesses[i].length; j++) tempInputs[(i + 1) * length - length + j].text = game.guesses[i][j];
 
-                            const result: string[] = gradeGuess(finalWord, game.guesses[i], tempInputs);
+                            const result: string[] = gradeGuess(game.finalWord, game.guesses[i], tempInputs);
                             for (let j = 0; j < result.length; j++) {
                                 let color: string = result[j];
-                                tempInputs[(i + 1) * 5 - 5 + j].color = color;
-                                tempInputs[(i + 1) * 5 - 5 + j].locked = true;
+                                tempInputs[(i + 1) * length - length + j].color = color;
+                                tempInputs[(i + 1) * length - length + j].locked = true;
                                 setKeyboard((prevKeyboard: Key[][]) => {
                                     let tempKeyboard: Key[][] = prevKeyboard;
                                     const indices: [number, number] | null = findKeyIndices(tempKeyboard, game.guesses[i][j]);
@@ -127,6 +149,7 @@ const QuickleGame = () => {
                                 });
                             }
                         }
+                        console.log('testing');
 
                         return tempInputs;
                     });
@@ -150,8 +173,24 @@ const QuickleGame = () => {
             });
         }
 
-        if (isRunning) setGamePaused(false);
+        if (isRunning) {
+            setGamePaused(false);
+            gameRunning.current = false;
+        }
     }, [isRunning]);
+
+    const newWord = (words: string[], guessWords: string[]) => {
+        setFinalWord(() => {
+            let word;
+            while (true) {
+                word = guessWords[Math.floor(Math.random() * guessWords.length)];
+                if (words.indexOf(word.toLowerCase()) !== -1) {
+                    break;
+                }
+            }
+            return word;
+        });
+    };
 
     /*
         this function runs whenever a key is pressed, or whenever one of the key elements in
@@ -178,9 +217,9 @@ const QuickleGame = () => {
                     // if the game has been won or lost, then pressing enter will reset the game
                 } else if (isOver) restartGame();
             }
-            
+
             // will check if the key is a letter, check that the key's length is one (letter), checks that the index is valid, checks that the index isn't locked, and checks that the game isn't paused
-            if (key.match(/[a-zA-Z]/) && key.length === 1 && index < 5 * guess && index < inputs.length && !inputs[index].locked && !gamePaused) {
+            if (key.match(/[a-zA-Z]/) && key.length === 1 && index < guessLength * guess && index < inputs.length && !inputs[index].locked && !gamePaused) {
                 setInputs((prev) => {
                     let tempInputs: InputBox[] = [...prev];
                     tempInputs[index].text = key.toUpperCase(); // adds letter to boxes
@@ -188,7 +227,7 @@ const QuickleGame = () => {
                     setIsRunning(true); // makes sure that the game is running
                     return tempInputs;
                 });
-            // checks if the key is 'backspace', then checks that the index is valid and the game isn't paused 
+                // checks if the key is 'backspace', then checks that the index is valid and the game isn't paused
             } else if (key.toLowerCase() === 'backspace' && !inputs[index > 0 ? index - 1 : 0].locked && !gamePaused) {
                 setInputs((prev) => {
                     let tempInputs: InputBox[] = [...prev];
@@ -202,7 +241,6 @@ const QuickleGame = () => {
         [inputs, guess, isRunning]
     );
 
-
     /* 
         this function will run only when it's called in the handleKeyPress function, when the 'enter'
         key has been pressed. this function will take in the current input boxes, the current index,
@@ -212,15 +250,15 @@ const QuickleGame = () => {
     const handleReturn = useCallback(
         (boxes: InputBox[], index: number, guess: number): InputBox[] => {
             // sends a fail toast if the guess isn't 5 letters
-            if ((index + 1) % 5 !== 0 && isRunning) {
-                failToast('Needs to be 5 letters.');
+            if ((index + 1) % guessLength !== 0 && isRunning) {
+                failToast(`Needs to be ${guessLength} letters.`);
                 return boxes;
             } else if (guess > 6) return boxes;
 
             let word = '';
-            for (let i = guess * 5 - 5; i < guess * 5; i++) word += boxes[i].text.toUpperCase(); // appends all guess letters to a string
+            for (let i = guess * guessLength - guessLength; i < guess * guessLength; i++) word += boxes[i].text.toUpperCase(); // appends all guess letters to a string
 
-            if (word.length < 5) return boxes;
+            if (word.length < guessLength) return boxes;
 
             // if the word isn't found in the array of potential words, sends a fail toast
             if (words.indexOf(word.toLowerCase()) == -1) {
@@ -256,18 +294,18 @@ const QuickleGame = () => {
             for (let i = 0; i < result.length; i++) {
                 if (result[i].toLowerCase() == 'green') greenCount++;
 
-                boxes[guess * 5 - 5 + i].color = result[i];
-                boxes[guess * 5 - 5 + i].locked = true;
+                boxes[guess * guessLength - guessLength + i].color = result[i];
+                boxes[guess * guessLength - guessLength + i].locked = true;
             }
 
-            if (greenCount == 5) stopGame(true); // if all 5 letters are green, triggers stopGame() with true as a parameter (signifying game won)
+            if (greenCount == guessLength) stopGame(true); // if all 5 letters are green, triggers stopGame() with true as a parameter (signifying game won)
             else if (guess == 6) stopGame(false); // if the last guess has been made, triggers stopGame() with false as a parameter (signifying game lost)
 
             setGuess((prev) => prev + 1); // increases guess by 1
 
             return boxes;
         },
-        [guess, hardMode]
+        [guess, hardMode, words, finalWord]
     );
 
     /*
@@ -276,31 +314,34 @@ const QuickleGame = () => {
         right place, then checking a second time with just the letters that aren't green, returns
         an array of 5 strings either with 'gray, 'yellow', or 'green'
     */
-    const gradeGuess = (finalWord: string, word: string, boxes: InputBox[]): string[] => {
-        const result: string[] = Array(5).fill('gray');
-        const matched: boolean[] = Array(5).fill(false);
+    const gradeGuess = useCallback(
+        (finalWord: string, word: string, boxes: InputBox[]): string[] => {
+            const result: string[] = Array(guessLength).fill('gray');
+            const matched: boolean[] = Array(guessLength).fill(false);
 
-        for (let i = 0; i < 5; i++) {
-            if (finalWord[i].toLowerCase() == word[i].toLowerCase()) {
-                result[i] = 'green';
-                matched[i] = true;
+            for (let i = 0; i < guessLength; i++) {
+                if (finalWord[i].toLowerCase() == word[i].toLowerCase()) {
+                    result[i] = 'green';
+                    matched[i] = true;
+                }
             }
-        }
 
-        for (let i = 0; i < 5; i++) {
-            if (result[i].toLowerCase() != 'green') {
-                for (let j = 0; j < 5; j++) {
-                    if (!matched[j] && word[i].toLowerCase() == finalWord[j].toLowerCase()) {
-                        result[i] = 'yellow';
-                        matched[j] = true;
-                        break;
+            for (let i = 0; i < guessLength; i++) {
+                if (result[i].toLowerCase() != 'green') {
+                    for (let j = 0; j < guessLength; j++) {
+                        if (!matched[j] && word[i].toLowerCase() == finalWord[j].toLowerCase()) {
+                            result[i] = 'yellow';
+                            matched[j] = true;
+                            break;
+                        }
                     }
                 }
             }
-        }
 
-        return result;
-    };
+            return result;
+        },
+        [finalWord]
+    );
 
     /*
         this function will stop the game after it's been won or lost (or quit), adding the most recent
@@ -314,7 +355,8 @@ const QuickleGame = () => {
             setInputs((prev: InputBox[]) => {
                 let temp: InputBox[] = [...prev];
 
-                setStopwatchTime((prevStopwatch) => { // needs most recent stopwatchTime, won't work if it's accessed regularly
+                setStopwatchTime((prevStopwatch) => {
+                    // needs most recent stopwatchTime, won't work if it's accessed regularly
                     setGamesPlayed((prev: Game[]) => {
                         const gamesPlayed: Game[] = [...prev];
                         // finding the current guess using the most recent blank index
@@ -325,22 +367,25 @@ const QuickleGame = () => {
                                 break;
                             }
                         }
-                        const currentGuess = Math.floor(index / 5) + 1 < 7 ? Math.floor(index / 5) + 1 : 6; // finds the guess that the game ended on
+                        const currentGuess = Math.floor(index / guessLength) + 1 < 7 ? Math.floor(index / guessLength) + 1 : 6; // finds the guess that the game ended on
 
-                        const newGame: Game = { // member to be added to gamesPlayed array (takes all information from the current game played)
+                        const newGame: Game = {
+                            // member to be added to gamesPlayed array (takes all information from the current game played)
                             guess: currentGuess, // calculated above
                             guesses: [], // to be added to in for loop below
-                            finalWord: finalWord, 
+                            finalWord: finalWord,
                             stopwatch: prevStopwatch,
                             won: won, // takes from parameter
                             id: generatedID, // uses generatedID above, is unique to every function call
                             hardMode: hardMode, // identifies if the game was completed in hardMode
                             sessionID: sessionStorage.getItem('sessionID'), // takes the current sessionID, is used later in Statistics.tsx
+                            guessLength: guessLength,
                         };
 
-                        for (let i = 1; i < currentGuess; i++) { // appends the guesses in the input boxes to the 'guesses' array property above
+                        for (let i = 1; i < currentGuess; i++) {
+                            // appends the guesses in the input boxes to the 'guesses' array property above
                             let word = '';
-                            for (let j = i * 5 - 5; j < i * 5; j++) {
+                            for (let j = i * guessLength - guessLength; j < i * guessLength; j++) {
                                 word += temp[j].text.toLowerCase();
                             }
                             newGame.guesses.push(word);
@@ -369,7 +414,7 @@ const QuickleGame = () => {
             //for the first 3 games played, the game will display a toast describing how to start a new game
             if (gamesPlayed.length <= 3) toast('Press [ENTER] to start a new game.', { duration: 3000, position: 'bottom-right', className: `${fredokaLight.className}` });
         },
-        [stopwatchTime, currentGame, hardMode]
+        [stopwatchTime, currentGame, hardMode, guessLength]
     );
 
     /* 
@@ -398,7 +443,8 @@ const QuickleGame = () => {
         setGuess(1);
         setStopwatchTime('00:00:00.000');
         setGamePaused(false);
-        finalWord = words[Math.floor(Math.random() * 2500)].toUpperCase();
+        gameRunning.current = false;
+        newWord(words, guessWords);
     };
 
     /*
@@ -438,13 +484,14 @@ const QuickleGame = () => {
             const knownGreen: ColorResult[] = []; // will hold all of the 'green' letters (all correct letters with known position)
             let knownYellow: YellowResult[] = []; // will hold all of the 'yellow' letters (all correct letters in the wrong position)
 
-            for (let r = 1; r < guess; r++) { // will iterate through all the current guesses made
+            for (let r = 1; r < guess; r++) {
+                // will iterate through all the current guesses made
                 let currentWord = ''; // current word we're looking at, added to in for loop below
-                for (let c = r * 5 - 5; c < r * 5; c++) currentWord += boxes[c].text.toLowerCase();
+                for (let c = r * guessLength - guessLength; c < r * guessLength; c++) currentWord += boxes[c].text.toLowerCase();
                 let result: string[] = gradeGuess(finalWord, currentWord, boxes); // grades the current guess we're looking at for this instance of the for loop
 
                 // this for loop will look at the graded guess for this for loop, adding it to either the knownGreen or knownYellow arrays if it doesn't already exist in tehre
-                for (let i = 0; i < result.length; i++) 
+                for (let i = 0; i < result.length; i++)
                     if (result[i].toLowerCase() == 'green' && !knownGreen.some((result) => result.letter === currentWord[i])) knownGreen.push({ index: i, letter: currentWord[i] });
                     else if (
                         result[i].toLowerCase() == 'yellow' &&
@@ -456,8 +503,10 @@ const QuickleGame = () => {
 
             let gradedGuess = gradeGuess(finalWord, word, boxes); // grades the actual current guess
 
-            for (let i = 0; i < knownGreen.length; i++) { // iterates through all of the known green letters
-                if (gradedGuess[knownGreen[i].index].toLowerCase() !== 'green') { // if the green letter isn't used, fulfills this if statement
+            for (let i = 0; i < knownGreen.length; i++) {
+                // iterates through all of the known green letters
+                if (gradedGuess[knownGreen[i].index].toLowerCase() !== 'green') {
+                    // if the green letter isn't used, fulfills this if statement
                     // handles the logic for the ordinal number that will be used in the toast (1st, 2nd, 3rd, etc.)
                     const suffixes = ['th', 'st', 'nd', 'rd'];
                     const value = (knownGreen[i].index + 1) % 100;
@@ -468,8 +517,10 @@ const QuickleGame = () => {
             }
 
             knownYellow = updateYellowResults(knownYellow, word); // uses utility function to update the knownYellow array 'used' property
-            for (let i = 0; i < knownYellow.length; i++) { // iterates through all the known yellow letters
-                if (!knownYellow[i].used) { // if a yellow letter isn't used in the guess, displays a toast
+            for (let i = 0; i < knownYellow.length; i++) {
+                // iterates through all the known yellow letters
+                if (!knownYellow[i].used) {
+                    // if a yellow letter isn't used in the guess, displays a toast
                     failToast(`Guess must contain ${knownYellow[i].letter.toUpperCase()}`);
                     return false;
                 }
@@ -514,6 +565,8 @@ const QuickleGame = () => {
                     : 'border-[#d3d6da] bg-white text-black dark:bg-gray-700 dark:border-gray-600';
             const className = `${fredokaSemibold.className} ${
                 gamePaused && !isRunning && !isOver ? `blur opacity-15` : '' // blurs the input box if the game is paused
+            } ${
+                guessLength > 5 ? 'max-tobile:w-14 max-tobile:h-14 max-mablet:h-12 max-mablet:w-12 max-mobile:w-11 max-mobile:h-11' : ''
             } w-16 h-16 max-mablet:w-14 max-mablet:h-14 rounded grid place-items-center border-2 select-none font-black text-4xl max-mablet:text-[2rem] ${color}`;
 
             return (
@@ -539,12 +592,14 @@ const QuickleGame = () => {
         };
     }, [handleKeyPress]);
 
+    const colClasses = ['grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6', 'grid-cols-7'];
     // this is the actual functional component returned, and is very tiny because the various elements are split into different functional components in various files
     return (
         <div className='mt-3 flex flex-col justify-center items-center'>
             <UtilityButtons stopGame={stopGame} /> {/* calls the UtilityButtons functional component, passing in the stopGame array because it doesn't have access to it */}
-            <div className={`grid grid-cols-5 grid-rows-6 gap-1.5 justify-center mb-5`}>
-                {gamePaused && !isRunning && !isOver && <PausedModal stopGame={stopGame} />} {/* if the game has been paused, calls the PausedModal functional component from Paused.tsx */}
+            <div className={`grid ${colClasses[guessLength - 3]} grid-rows-6 gap-1.5 justify-center mb-5`}>
+                {gamePaused && !isRunning && !isOver && <PausedModal stopGame={stopGame} />}{' '}
+                {/* if the game has been paused, calls the PausedModal functional component from Paused.tsx */}
                 {inputs.map((input: InputBox) => inputElement(input))} {/* uses the inputElement() functional component to render each input box */}
             </div>
             <Keyboard handleKeyPress={handleKeyPress} /> {/* calls the Keyboard functional component, passing in the handleKeyPress function to handle when a key is pressed */}

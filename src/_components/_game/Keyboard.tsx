@@ -1,4 +1,4 @@
-import { useGameContext, fredokaBold, Key } from '@/app/context'; // Key type, context, and font imported from context.tsx
+import { useGameContext, fredokaBold, Key, generateID } from '@/app/context'; // Key type, context, and font imported from context.tsx
 import { Delete } from 'lucide-react'; // delete icon
 
 const Keyboard = ({ handleKeyPress }: { handleKeyPress: (e: KeyboardEvent | string) => void }) => {
@@ -32,12 +32,14 @@ const Keyboard = ({ handleKeyPress }: { handleKeyPress: (e: KeyboardEvent | stri
             <div className={className} onClick={() => handleKeyPress(key.key.toUpperCase())} key={key.key}>
                 {key.key.toLowerCase() !== 'backspace' ? key.key.toUpperCase() : <Delete className='w-8 h-8' />}
             </div>
-        ) : ( // if the game has been paused, then no color is displayed, rather everything is blank to prevent cheating
+        ) : (
+            // if the game has been paused, then no color is displayed, rather everything is blank to prevent cheating
             <div
                 className={`${fredokaBold.className} ${size} bg-[#d3d6da] dark:bg-gray-500 grid place-items-center font-extrabold cursor-pointer rounded-lg select-none h-12`}
                 onClick={() => {
                     if (key.key.toLowerCase() == 'enter') handleKeyPress(key.key.toUpperCase());
                 }}
+                key={key.key}
             >
                 {key.key.toLowerCase() !== 'backspace' ? key.key.toUpperCase() : <Delete className='w-8 h-8' />}
             </div>

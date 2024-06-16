@@ -80,10 +80,10 @@ const Navbar = () => {
                 </div>
             </div>
             <AlertDialog open={alertDialogOpened} onOpenChange={setAlertDialogOpened}>
-                <AlertDialogContent className={`${fredokaLight.className} rounded-md`}>
+                <AlertDialogContent className={`${fredokaLight.className} outline-none rounded-md w-[60%] max-tablet:w-[70%] max-tobile:w-[80%] max-mobile:w-[90%] z-[99999]`}>
                     <div className='w-full flex flex-col gap-1'>
-                        <h2 className={`${fredokaBold.className} text-3xl`}>Are you absolutely sure?</h2>
-                        <p className={`${fredokaLight.className}`}>
+                        <h2 className={`${fredokaBold.className} text-3xl max-[500px]:text-2xl`}>Are you absolutely sure?</h2>
+                        <p className={`${fredokaLight.className} max-[500px]:text-md`}>
                             This will <span className={fredoka.className}>permanently</span> remove your statistics from this browser&#39;s data. This action can not be undone.
                         </p>
                     </div>
@@ -104,6 +104,7 @@ const Navbar = () => {
                                     fastestTime: '00:00:00.000',
                                     winPercentage: 0,
                                     statType: 'normal',
+                                    guessLength: 5,
                                 });
                                 setGamesPlayed([]);
                                 setPrevGames([]);

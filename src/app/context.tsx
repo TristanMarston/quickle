@@ -5,6 +5,7 @@ import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { keyboardData } from '../../public/pagedata'; // has all information about keys
 import toast from 'react-hot-toast'; // for little information displayed at top of screen, like "you win!" or "you lose!"
 import { Fredoka } from 'next/font/google'; // primary font I use for this project
+import path from 'path';
 
 // defining my fonts and the font weights
 export const fredokaLight = Fredoka({ weight: '400', subsets: ['latin'] });
@@ -33,6 +34,7 @@ export type Game = {
     id?: string;
     hardMode?: boolean;
     sessionID?: string | null | undefined;
+    guessLength?: number;
 };
 
 export type Stats = {
@@ -46,6 +48,7 @@ export type Stats = {
     fastestTime: string;
     winPercentage: number;
     statType: string;
+    guessLength: number;
 };
 
 // all of the state (global variables) that I'm exporting out of this file to use anywhere
@@ -85,6 +88,17 @@ type Context = {
     alertDialog: React.MutableRefObject<boolean>;
     formattedStats: Stats;
     setFormattedStats: React.Dispatch<React.SetStateAction<Stats>>;
+    guessLength: number;
+    setGuessLength: React.Dispatch<React.SetStateAction<number>>;
+    words: string[];
+    setWords: React.Dispatch<React.SetStateAction<string[]>>;
+    guessWords: string[];
+    setGuessWords: React.Dispatch<React.SetStateAction<string[]>>;
+    finalWord: string;
+    setFinalWord: React.Dispatch<React.SetStateAction<string>>;
+    gameRunning: React.MutableRefObject<boolean>;
+    selectedLength: number;
+    setSelectedLength: React.Dispatch<React.SetStateAction<number>>;
 };
 
 // helper functions, exported to use anywhere in project
@@ -170,6 +184,42 @@ export const successToast = (message: string) => {
     });
 };
 
+const fileNames: {
+    length: number;
+    file: string;
+}[] = [
+    { length: 3, file: 'three-letter-words.txt' },
+    { length: 4, file: 'four-letter-words.txt' },
+    { length: 5, file: 'five-letter-words.txt' },
+    { length: 6, file: 'six-letter-words.txt' },
+    { length: 7, file: 'seven-letter-words.txt' },
+];
+
+export const getWords = async (length: number): Promise<string[]> => {
+    const filePath = path.join(process.cwd(), findFile(length));
+    const response = await fetch(filePath);
+    const text = await response.text();
+    const words = text.split(/\s+/);
+    return words;
+};
+
+export const getGuessWords = async (length: number): Promise<string[]> => {
+    const filePath = path.join(process.cwd(), '10000-most-common.txt');
+    const response = await fetch(filePath);
+    const text = await response.text();
+    const words = text.split(/\s+/);
+    return words.filter((word) => word.length === length);
+};
+
+const findFile = (length: number): string => {
+    let result: string = '';
+    fileNames.forEach((file) => {
+        if (file.length === length) result = file.file;
+    });
+
+    return result;
+};
+
 // Create the context
 const GameContext = createContext<Context | undefined>(undefined);
 
@@ -181,10 +231,15 @@ export const GameProvider = ({ children }: any) => {
     // the following three variables are very similar, but have different functionalities
     const [isRunning, setIsRunning] = useState(false); // this state says whether or not a game is CURRENTLY running (timer going)
     const [gamePaused, setGamePaused] = useState(false); // this state says whether or not a game is paused
+    const [guessLength, setGuessLength] = useState<number>(() => {
+        let length = localStorage.getItem('guessLength');
+        if (length !== null && !isNaN(parseInt(length))) return parseInt(length);
+        return 5;
+    });
     const [isOver, setIsOver] = useState(false); // this state says whether a game has either been won or lost, resets if the board is reset
     const [inputs, setInputs] = useState<InputBox[]>(() => {
         const newInputs: InputBox[] = [];
-        for (let i = 0; i < 30; i++) newInputs[i] = { id: i, text: '', locked: false, color: 'none' };
+        for (let i = 0; i < guessLength * 6; i++) newInputs[i] = { id: i, text: '', locked: false, color: 'none' };
         return newInputs;
     });
     const [keyboard, setKeyboard] = useState<Key[][]>(keyboardData);
@@ -199,6 +254,7 @@ export const GameProvider = ({ children }: any) => {
     const [guess, setGuess] = useState(1);
     const [alertDialogOpened, setAlertDialogOpened] = useState(false);
     const alertDialog = useRef(false);
+    const gameRunning = useRef(false);
     const [formattedStats, setFormattedStats] = useState<Stats>({
         guessNumbers: [0, 0, 0, 0, 0, 0],
         currentStreak: 0,
@@ -210,9 +266,14 @@ export const GameProvider = ({ children }: any) => {
         fastestTime: '00:00:00.000',
         winPercentage: 0,
         statType: 'normal',
+        guessLength: 5,
     });
 
     const [darkMode, setDarkMode] = useState(false);
+    const [words, setWords] = useState<string[]>([]);
+    const [guessWords, setGuessWords] = useState<string[]>([]);
+    const [finalWord, setFinalWord] = useState<string>('');
+    const [selectedLength, setSelectedLength] = useState<number>(5);
 
     /* 
         this useEffect() runs right after launch, depicted by the empty dependency array ([]),
@@ -226,9 +287,64 @@ export const GameProvider = ({ children }: any) => {
         const isHard = localStorage.getItem('hardMode');
         if (isHard === 'true') setHardMode(true);
 
+        const length: string | null = localStorage.getItem('guessLength');
+        if (length !== null && !isNaN(parseInt(length))) {
+            setGuessLength(parseInt(length));
+            getWords(parseInt(length)).then((res: string[]) => setWords(res));
+            getGuessWords(parseInt(length)).then((res: string[]) => setGuessWords(res));
+        } else {
+            getWords(5).then((res: string[]) => setWords(res));
+            getGuessWords(5).then((res: string[]) => setGuessWords(res));
+        }
+
         const sessionID = generateID(Math.random() * 10 + 5);
         sessionStorage.setItem('sessionID', sessionID);
     }, []);
+
+    useEffect(() => {
+        localStorage.setItem('guessLength', guessLength.toString());
+        setSelectedLength(guessLength);
+        getWords(guessLength).then((res: string[]) => {
+            setWords(res);
+            getGuessWords(guessLength).then((response: string[]) => {
+                setGuessWords(response);
+                if (!gameRunning.current) {
+                    setFinalWord(() => {
+                        let word;
+                        while (true) {
+                            word = response[Math.floor(Math.random() * response.length)];
+                            if (res.indexOf(word.toLowerCase()) !== -1) {
+                                break;
+                            }
+                        }
+                        return word;
+                    });
+                }
+            });
+        });
+
+        setInputs((prev) => {
+            if (!gameRunning.current) {
+                const newInputs: InputBox[] = [];
+                for (let i = 0; i < guessLength * 6; i++) newInputs[i] = { id: i, text: '', locked: false, color: 'none' };
+                return newInputs;
+            }
+            return prev;
+        });
+        setKeyboard((prev) => {
+            if (!gameRunning.current) {
+                let tempKeyboard = prev;
+                for (let r = 0; r < tempKeyboard.length; r++) for (let c = 0; c < tempKeyboard[r].length; c++) tempKeyboard[r][c].color = 'none';
+
+                return tempKeyboard;
+            }
+            return prev;
+        });
+        if (!gameRunning.current) {
+            setGuess(1);
+            setStopwatchTime('00:00:00.000');
+        }
+    }, [guessLength]);
 
     /*
         this useEffect() runs whenever the darkMode state is changed, and it sets the localStorage
@@ -300,6 +416,17 @@ export const GameProvider = ({ children }: any) => {
                 alertDialog,
                 formattedStats,
                 setFormattedStats,
+                guessLength,
+                setGuessLength,
+                words,
+                setWords,
+                guessWords,
+                setGuessWords,
+                finalWord,
+                setFinalWord,
+                gameRunning,
+                selectedLength,
+                setSelectedLength,
             }}
         >
             {children} {/* refers to all the children of the provider, found in page.tsx */}
