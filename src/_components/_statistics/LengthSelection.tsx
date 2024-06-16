@@ -1,4 +1,4 @@
-import { useGameContext } from '@/app/context';
+import { generateID, useGameContext } from '@/app/context';
 import { Fredoka } from 'next/font/google';
 import { motion } from 'framer-motion';
 
@@ -54,6 +54,7 @@ const LengthSelection = () => {
                         rotate: '2.5deg',
                         scale: 1.05,
                     }}
+                    key={generateID(5)}
                 >
                     {selected ? (guess !== -1 ? guess : 'ALL') : ''}
                 </motion.div>

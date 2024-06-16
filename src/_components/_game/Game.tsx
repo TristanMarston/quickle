@@ -66,7 +66,7 @@ const QuickleGame = () => {
             setPrevGames(gamesPlayedJSON);
             localStorage.setItem('gamesPlayed', JSON.stringify(gamesPlayedJSON));
         }
-    }, [gamesPlayed]);
+    }, [gamesPlayed, setPrevGames]);
 
     /*
         this useEffect() runs whenever the guess number is changed (once a guess has been made),
