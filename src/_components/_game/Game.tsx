@@ -83,12 +83,13 @@ const QuickleGame = () => {
                 const guesses: string[] = Array(guess - 1).fill('');
                 for (let i = 0; i < guess - 1; i++) for (let j = (i + 1) * guessLength - guessLength; j < (i + 1) * guessLength; j++) guesses[i] += inputs[j].text.toUpperCase();
                 game.guesses = guesses;
+                game.guessLength = guessLength;
 
                 localStorage.setItem('currentGame', JSON.stringify(game));
                 return game;
             });
         }
-    }, [guess]);
+    }, [guess, guessLength]);
 
     /*
         this useEffect() runs when the program is launched, and checks if there's a currentGame
@@ -124,13 +125,15 @@ const QuickleGame = () => {
                     setStopwatchTime(game.stopwatch);
                     setFinalWord(game.finalWord);
 
-                    setInputs((prev: InputBox[]) => {
-                        let tempInputs: InputBox[] = prev;
+                    setInputs(() => {
+                        let tempInputs: InputBox[] = [];
+                        for (let i = 0; i < length * 6; i++) tempInputs[i] = { id: i, text: '', locked: false, color: 'none' };
 
                         for (let i = 0; i < game.guesses.length; i++) {
                             for (let j = 0; j < game.guesses[i].length; j++) tempInputs[(i + 1) * length - length + j].text = game.guesses[i][j];
 
-                            const result: string[] = gradeGuess(game.finalWord, game.guesses[i], tempInputs);
+                            console.log(game.finalWord);
+                            const result: string[] = gradeGuess(game.finalWord, game.guesses[i], game.guessLength !== undefined ? game.guessLength : 5);
                             for (let j = 0; j < result.length; j++) {
                                 let color: string = result[j];
                                 tempInputs[(i + 1) * length - length + j].color = color;
@@ -270,7 +273,7 @@ const QuickleGame = () => {
             if (hardMode && !hardModeGuessValid(boxes, word, guess)) return boxes;
 
             // uses the gradeGuess helper function to return an array of strings, either 'green', 'yellow', or 'gray' depending on its score in relation to the final word.
-            const result: string[] = gradeGuess(finalWord, word, boxes);
+            const result: string[] = gradeGuess(finalWord, word, guessLength);
 
             // changes the color of the keys in the keyboard
             setKeyboard((prev: Key[][]) => {
@@ -314,34 +317,33 @@ const QuickleGame = () => {
         right place, then checking a second time with just the letters that aren't green, returns
         an array of 5 strings either with 'gray, 'yellow', or 'green'
     */
-    const gradeGuess = useCallback(
-        (finalWord: string, word: string, boxes: InputBox[]): string[] => {
-            const result: string[] = Array(guessLength).fill('gray');
-            const matched: boolean[] = Array(guessLength).fill(false);
+    const gradeGuess = (finalWord: string, word: string, guessLength: number): string[] => {
+        const result: string[] = Array(guessLength).fill('gray');
+        const matched: boolean[] = Array(guessLength).fill(false);
+        console.log(finalWord);
+        console.log(guessLength);
 
-            for (let i = 0; i < guessLength; i++) {
-                if (finalWord[i].toLowerCase() == word[i].toLowerCase()) {
-                    result[i] = 'green';
-                    matched[i] = true;
-                }
+        for (let i = 0; i < guessLength; i++) {
+            if (finalWord[i].toLowerCase() == word[i].toLowerCase()) {
+                result[i] = 'green';
+                matched[i] = true;
             }
+        }
 
-            for (let i = 0; i < guessLength; i++) {
-                if (result[i].toLowerCase() != 'green') {
-                    for (let j = 0; j < guessLength; j++) {
-                        if (!matched[j] && word[i].toLowerCase() == finalWord[j].toLowerCase()) {
-                            result[i] = 'yellow';
-                            matched[j] = true;
-                            break;
-                        }
+        for (let i = 0; i < guessLength; i++) {
+            if (result[i].toLowerCase() != 'green') {
+                for (let j = 0; j < guessLength; j++) {
+                    if (!matched[j] && word[i].toLowerCase() == finalWord[j].toLowerCase()) {
+                        result[i] = 'yellow';
+                        matched[j] = true;
+                        break;
                     }
                 }
             }
+        }
 
-            return result;
-        },
-        [finalWord]
-    );
+        return result;
+    };
 
     /*
         this function will stop the game after it's been won or lost (or quit), adding the most recent
@@ -488,7 +490,7 @@ const QuickleGame = () => {
                 // will iterate through all the current guesses made
                 let currentWord = ''; // current word we're looking at, added to in for loop below
                 for (let c = r * guessLength - guessLength; c < r * guessLength; c++) currentWord += boxes[c].text.toLowerCase();
-                let result: string[] = gradeGuess(finalWord, currentWord, boxes); // grades the current guess we're looking at for this instance of the for loop
+                let result: string[] = gradeGuess(finalWord, currentWord, guessLength); // grades the current guess we're looking at for this instance of the for loop
 
                 // this for loop will look at the graded guess for this for loop, adding it to either the knownGreen or knownYellow arrays if it doesn't already exist in tehre
                 for (let i = 0; i < result.length; i++)
@@ -501,7 +503,7 @@ const QuickleGame = () => {
                         knownYellow.push({ index: i, letter: currentWord[i], used: false });
             }
 
-            let gradedGuess = gradeGuess(finalWord, word, boxes); // grades the actual current guess
+            let gradedGuess = gradeGuess(finalWord, word, guessLength); // grades the actual current guess
 
             for (let i = 0; i < knownGreen.length; i++) {
                 // iterates through all of the known green letters
